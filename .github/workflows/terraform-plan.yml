@@ -1,0 +1,46 @@
+name: Terraform Plan (dev)
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-plan-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform_plan_dev:
+    name: TF-Plan-Dev
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra/terraform/environments/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false
+
+      - name: Terraform plan (no changes applied)
+        run: terraform plan -no-color
+
+      - name: Upload plan output (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-plan-dev
+          path: |
+            infra/terraform/environments/dev/.terraform.lock.hcl
