@@ -55,12 +55,36 @@ jobs:
           framework: terraform
           quiet: true
           soft_fail: false
+          output_format: sarif
+          output_file_path: results.sarif
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: steps.changes.outputs.terraform == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
 
       - name: Setup Terraform
         if: steps.changes.outputs.terraform == 'true'
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.5"
+          terraform_wrapper: false
+
+      - name: Setup Terraform plugin cache
+        if: steps.changes.outputs.terraform == 'true'
+        run: |
+          mkdir -p ~/.terraform.d/plugin-cache
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> $GITHUB_ENV
+
+      - name: Cache Terraform plugins
+        if: steps.changes.outputs.terraform == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-plugins-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-plugins-${{ runner.os }}-
 
       - name: Terraform fmt/validate/plan (dev)
         if: steps.changes.outputs.terraform == 'true'
