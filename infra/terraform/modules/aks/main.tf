@@ -5,6 +5,8 @@ resource "azurerm_kubernetes_cluster" "this" {
   dns_prefix          = var.dns_prefix
 
   azure_policy_enabled = true
+  sku_tier = "Standard"
+  disk_encryption_set_id = var.disk_encryption_set_id
 
  key_vault_secrets_provider {
   secret_rotation_enabled  = true
