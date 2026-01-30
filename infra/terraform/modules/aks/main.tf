@@ -14,6 +14,19 @@ resource "azurerm_kubernetes_cluster" "this" {
   secret_rotation_interval = "30m"
 }
 
+resource "azurerm_kubernetes_cluster_node_pool" "user" {
+  name                  = "userpool"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+  vm_size               = var.user_vm_size
+  node_count            = var.user_node_count
+  vnet_subnet_id        = var.subnet_id
+  max_pods              = 50
+  mode                  = "User"
+
+  tags = var.tags
+}
+
+
 
   identity {
     type = "SystemAssigned"
@@ -28,15 +41,17 @@ resource "azurerm_kubernetes_cluster" "this" {
     outbound_type  = "loadBalancer"
   }
 
-  default_node_pool {
-  name           = "system"
-  node_count     = var.node_count
-  vm_size        = var.vm_size
-  vnet_subnet_id = var.subnet_id
+default_node_pool {
+  name                 = "system"
+  node_count           = var.node_count
+  vm_size              = var.vm_size
+  vnet_subnet_id       = var.subnet_id
+  max_pods             = 50
 
-  # Required for CKV_AZURE_168
-  max_pods = 50
- }
+  # ✅ Helps satisfy CKV_AZURE_232 expectations
+  only_critical_addons_enabled = true
+}
+
 
   oms_agent {
     log_analytics_workspace_id = var.log_analytics_workspace_id
