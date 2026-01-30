@@ -3,35 +3,40 @@ name: Terraform CI
 on:
   pull_request:
     branches: ["main"]
-    paths:
-      - "README.md"
-      - "infra/terraform/**"
-      - ".github/workflows/terraform-ci.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write          # REQUIRED for Azure OIDC
-  security-events: write   # (ok to keep; not required for Checkov unless you upload SARIF)
+  id-token: write
+  security-events: write
 
 concurrency:
   group: terraform-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  terraform_pipeline:
-    name: TF-Master-Check
+  pr_required:
+    name: PR-Required
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: infra/terraform/environments/dev
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect Terraform changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            terraform:
+              - "infra/terraform/**"
+
+      - name: Skip (no Terraform changes)
+        if: steps.changes.outputs.terraform != 'true'
+        run: echo "No infra/terraform changes — skipping Terraform checks ✅"
+
       - name: Azure Login (OIDC)
+        if: steps.changes.outputs.terraform == 'true'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -39,11 +44,11 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Verify Azure context
-        run: |
-          az account show -o table
-          az account list -o table
+        if: steps.changes.outputs.terraform == 'true'
+        run: az account show -o table
 
       - name: Run Checkov (IaC Security Scan)
+        if: steps.changes.outputs.terraform == 'true'
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: infra/terraform
@@ -52,26 +57,16 @@ jobs:
           soft_fail: false
 
       - name: Setup Terraform
+        if: steps.changes.outputs.terraform == 'true'
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.7.5"
 
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
-
-      - name: Terraform init (no backend)
-        run: terraform init -backend=false
-
-      - name: Terraform validate
-        run: terraform validate
-
-      - name: Terraform plan (no apply)
-        run: terraform plan -no-color
-
-  pr_required:
-    name: PR-Required
-    runs-on: ubuntu-latest
-    needs: [terraform_pipeline]
-    steps:
-      - name: Basic gate
-        run: echo "All required checks passed ✅"
+      - name: Terraform fmt/validate/plan (dev)
+        if: steps.changes.outputs.terraform == 'true'
+        working-directory: infra/terraform/environments/dev
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false
+          terraform validate
+          terraform plan -no-color
