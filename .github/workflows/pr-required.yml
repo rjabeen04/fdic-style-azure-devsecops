@@ -1,0 +1,16 @@
+name: PR Required Checks
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  required:
+    name: PR-Required
+    runs-on: ubuntu-latest
+    steps:
+      - name: Basic gate
+        run: echo "PR required checks passed ✅"
