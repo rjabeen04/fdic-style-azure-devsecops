@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [ "main" ]
     paths:
+      - "**/*.md"
       - "infra/terraform/**"
       - ".github/workflows/terraform-ci.yml"
   workflow_dispatch:
