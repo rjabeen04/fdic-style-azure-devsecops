@@ -7,6 +7,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   azure_policy_enabled = true
   sku_tier = "Standard"
   disk_encryption_set_id = var.disk_encryption_set_id
+  automatic_channel_upgrade = "stable"
 
  key_vault_secrets_provider {
   secret_rotation_enabled  = true
@@ -18,17 +19,24 @@ resource "azurerm_kubernetes_cluster" "this" {
     type = "SystemAssigned"
   }
 
+  api_server_access_profile {
+  authorized_ip_ranges = var.api_server_authorized_ip_ranges
+ }
+
   network_profile {
     network_plugin = "azure"
     outbound_type  = "loadBalancer"
   }
 
   default_node_pool {
-    name           = "system"
-    node_count     = var.node_count
-    vm_size        = var.vm_size
-    vnet_subnet_id = var.subnet_id
-  }
+  name           = "system"
+  node_count     = var.node_count
+  vm_size        = var.vm_size
+  vnet_subnet_id = var.subnet_id
+
+  # Required for CKV_AZURE_168
+  max_pods = 50
+ }
 
   oms_agent {
     log_analytics_workspace_id = var.log_analytics_workspace_id
