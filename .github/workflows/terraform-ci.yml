@@ -2,7 +2,7 @@ name: Terraform CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "README.md"
       - "infra/terraform/**"
@@ -11,8 +11,8 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # 🔴 REQUIRED for OIDC
-  security-events: write
+  id-token: write          # REQUIRED for Azure OIDC
+  security-events: write   # (ok to keep; not required for Checkov unless you upload SARIF)
 
 concurrency:
   group: terraform-ci-${{ github.ref }}
@@ -22,13 +22,6 @@ jobs:
   terraform_pipeline:
     name: TF-Master-Check
     runs-on: ubuntu-latest
-    
-   pr_required:
-    name: PR-Required
-    runs-on: ubuntu-latest
-    needs: [terraform_pipeline]
-    steps:
-      - run: echo "All required checks passed ✅
 
     defaults:
       run:
@@ -74,3 +67,11 @@ jobs:
 
       - name: Terraform plan (no apply)
         run: terraform plan -no-color
+
+  pr_required:
+    name: PR-Required
+    runs-on: ubuntu-latest
+    needs: [terraform_pipeline]
+    steps:
+      - name: Basic gate
+        run: echo "All required checks passed ✅"
