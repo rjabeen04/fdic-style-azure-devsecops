@@ -12,6 +12,11 @@ variable "disk_encryption_set_id" {
   description = "Disk Encryption Set ID for AKS disk encryption"
 }
 
+variable "api_server_authorized_ip_ranges" {
+  type        = list(string)
+  description = "Allowed IP ranges for AKS API server access"
+}
+
 variable "node_count" { type = number, default = 2 }
 variable "vm_size" { type = string, default = "Standard_DS2_v2" }
 
