@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   id-token: write   # 🔴 REQUIRED for OIDC
+  security-events: write
 
 concurrency:
   group: terraform-ci-${{ github.ref }}
