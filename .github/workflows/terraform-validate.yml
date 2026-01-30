@@ -1,7 +1,12 @@
 name: Terraform Validate (dev)
-# trigger
+
 on:
   pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-validate.yml"
+  push:
+    branches: ["main"]
     paths:
       - "infra/terraform/**"
       - ".github/workflows/terraform-validate.yml"
@@ -10,9 +15,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: terraform-validate-dev-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
-    name: fmt + validate (dev)
+  terraform_check:            # internal id (stable)
+    name: TF-Validate-Dev     # ✅ clean name used in Rulesets
     runs-on: ubuntu-latest
 
     defaults:
