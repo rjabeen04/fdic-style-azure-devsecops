@@ -11,6 +11,13 @@ locals {
     managed_by  = "terraform"
   }
 }
+module "rg" {
+  source   = "../../modules/rg"
+  name     = "${local.prefix}-rg"
+  location = var.location
+  tags     = local.tags
+}
+
 
 ############################
 # Phase 1 (dev): Foundation
