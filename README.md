@@ -73,3 +73,9 @@ Typical usage will include:
 - Terraform plan/apply via GitHub Actions
 - Helm deployments to AKS
 - Manual approvals for protected environments
+
+### CI/CD Security
+- GitHub Actions uses Azure OIDC authentication (no client secrets)
+- Terraform CI runs on pull requests with RBAC-based access
+- Checkov enforces IaC security controls
+
