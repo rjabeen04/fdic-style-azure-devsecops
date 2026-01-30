@@ -4,6 +4,14 @@ resource "azurerm_kubernetes_cluster" "this" {
   resource_group_name = var.resource_group_name
   dns_prefix          = var.dns_prefix
 
+  azure_policy_enabled = true
+
+ key_vault_secrets_provider {
+  secret_rotation_enabled  = true
+  secret_rotation_interval = "30m"
+}
+
+
   identity {
     type = "SystemAssigned"
   }
