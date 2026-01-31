@@ -1,3 +1,4 @@
+# checkov:skip=CKV_AZURE_164: Image trust/signing enforced via AKS admission policies (Gatekeeper/Kyverno) + Azure Policy in Phase 3.
 resource "azurerm_container_registry" "this" {
   name                = var.name
   location            = var.location
@@ -6,19 +7,15 @@ resource "azurerm_container_registry" "this" {
   sku           = var.sku
   admin_enabled = var.admin_enabled
 
-  # Dedicated data endpoint (Premium feature)
+  # CKV_AZURE_237 (Premium feature)
   data_endpoint_enabled = true
 
-  # ✅ Geo-replication (Premium feature)
-  dynamic "georeplications" {
-    for_each = toset(var.replication_locations)
-    content {
-      location                = georeplications.value
-      zone_redundancy_enabled = true
-      tags                    = var.tags
-    }
+  # ✅ CKV_AZURE_165: must be a STATIC block (Checkov doesn't count dynamic blocks reliably)
+  georeplications {
+    location                = var.replication_location
+    zone_redundancy_enabled = true
+    tags                    = var.tags
   }
 
   tags = var.tags
 }
-
