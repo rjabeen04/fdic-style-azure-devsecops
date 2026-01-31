@@ -3,15 +3,22 @@ resource "azurerm_container_registry" "this" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  # ✅ Enterprise settings
   sku           = var.sku
   admin_enabled = var.admin_enabled
 
-  # ✅ CKV_AZURE_237 (Premium recommended)
+  # Dedicated data endpoint (Premium feature)
   data_endpoint_enabled = true
 
-  # ✅ CKV_AZURE_165 (geo-replication)
-  georeplications = var.georeplications
+  # ✅ Geo-replication (Premium feature)
+  dynamic "georeplications" {
+    for_each = toset(var.replication_locations)
+    content {
+      location                = georeplications.value
+      zone_redundancy_enabled = true
+      tags                    = var.tags
+    }
+  }
 
   tags = var.tags
 }
+
