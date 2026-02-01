@@ -16,7 +16,7 @@ variable "resource_group_name" {
 variable "sku_name" {
   description = "Key Vault SKU."
   type        = string
-  default     = "standard"
+  default     = "premium"
 }
 
 variable "soft_delete_retention_days" {
@@ -76,7 +76,7 @@ variable "key_name" {
 variable "key_type" {
   description = "Key type."
   type        = string
-  default     = "RSA"
+  default     = "RSA-HSM"
 }
 
 variable "key_size" {
