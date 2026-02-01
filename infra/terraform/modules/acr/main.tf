@@ -19,6 +19,12 @@ resource "azurerm_container_registry" "this" {
     zone_redundancy_enabled = true
   }
 
+  # ✅ CKV_AZURE_166 - Image quarantine
+  quarantine_policy {
+  enabled = true
+ }
+
+
   # ✅ CKV_AZURE_167 - Cleanup untagged manifests
   retention_policy {
     enabled = true
