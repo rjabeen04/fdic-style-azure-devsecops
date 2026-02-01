@@ -12,3 +12,9 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "untagged_retention_days" {
+  description = "Days to retain untagged manifests before purge (0-365)."
+  type        = number
+  default     = 30
+}
