@@ -17,6 +17,38 @@ module "rg" {
   location = var.location
   tags     = local.tags
 }
+############################
+# Step 4) Network (VNet + Subnets)
+############################
+module "network" {
+  source              = "../../modules/network"
+  name                = "${local.prefix}-vnet"
+  location            = var.location
+  resource_group_name = module.rg.name
+
+  address_space = ["10.10.0.0/16"]
+
+  subnets = {
+    aks = {
+      address_prefixes                   = ["10.10.1.0/24"]
+      private_endpoint_policies_disabled = false
+    }
+
+    private_endpoints = {
+      address_prefixes                   = ["10.10.2.0/24"]
+      private_endpoint_policies_disabled = true
+    }
+
+    management = {
+      address_prefixes                   = ["10.10.3.0/24"]
+      private_endpoint_policies_disabled = false
+    }
+  }
+
+  tags = local.tags
+}
+
+
 
 module "log_analytics" {
   source              = "../../modules/log_analytics"
