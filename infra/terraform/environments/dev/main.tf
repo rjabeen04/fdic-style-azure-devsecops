@@ -26,22 +26,6 @@ module "log_analytics" {
   tags                = local.tags
 }
 
-locals {
-  env    = "dev"
-  prefix = "fdic-dev"
-  tags = {
-    environment = local.env
-    project     = "fdic-style-azure-devsecops"
-    managed_by  = "terraform"
-  }
-}
-
-module "rg" {
-  source   = "../../modules/rg"
-  name     = "${local.prefix}-rg"
-  location = var.location
-  tags     = local.tags
-}
 
 # ============================
 # Step 4: Network (VNet/Subnets)
