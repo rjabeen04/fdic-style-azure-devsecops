@@ -19,7 +19,7 @@ module "rg" {
 }
 
 # ============================
-# Step 4:: Network (VNet/Subnets)
+# Step 4:Network (VNet/Subnets)
 # ============================
 module "network" {
   source              = "../../modules/network"
