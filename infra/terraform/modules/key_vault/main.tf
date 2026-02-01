@@ -27,7 +27,7 @@ resource "azurerm_key_vault_key" "des" {
   key_type     = var.key_type
   key_size     = var.key_size
 
-  # ✅ CKV_AZURE_40 - set expiration date
+  # ✅ CKV_AZURE_40 - set expiration date 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
   key_opts = [
