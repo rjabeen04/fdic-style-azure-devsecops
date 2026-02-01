@@ -18,15 +18,6 @@ module "rg" {
   tags     = local.tags
 }
 
-module "log_analytics" {
-  source              = "../../modules/log_analytics"
-  name                = "${local.prefix}-law"
-  location            = var.location
-  resource_group_name = module.rg.name
-  tags                = local.tags
-}
-
-
 # ============================
 # Step 4: Network (VNet/Subnets)
 # ============================
