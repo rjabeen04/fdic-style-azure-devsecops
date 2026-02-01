@@ -12,7 +12,7 @@ locals {
   }
 }
 
-############################. 
+############################
 # Phase 1 (dev): Foundation
 ############################
 
@@ -25,7 +25,7 @@ module "rg" {
 }
 
 ############################
-# Step 4) Network (VNet + Subnets)
+# Step 2) Network (VNet + Subnets)
 ############################
 module "network" {
   source              = "../../modules/network"
@@ -72,7 +72,7 @@ module "log_analytics" {
 # 4) ACR (module later)
 # module "acr" {
 #   source              = "../../modules/acr"
-#   name                = "${local.prefix}acr"
+#   name                = "${local.prefix}-acr"
 #   location            = var.location
 #   resource_group_name = module.rg.name
 #
