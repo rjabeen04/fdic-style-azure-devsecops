@@ -1,5 +1,22 @@
 data "azurerm_client_config" "current" {}
 
+resource "azurerm_key_vault_key" "des" {
+  name         = var.key_name
+  key_vault_id = azurerm_key_vault.this.id
+  key_type     = var.key_type
+  key_size     = var.key_size
+
+  # ✅ CKV_AZURE_40 - set expiration date
+  expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
+
+  key_opts = [
+    "encrypt",
+    "decrypt",
+    "wrapKey",
+    "unwrapKey",
+  ]
+}
+
 resource "azurerm_key_vault" "this" {
   name                = var.name
   location            = var.location
