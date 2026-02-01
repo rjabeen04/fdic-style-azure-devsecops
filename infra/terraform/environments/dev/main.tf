@@ -23,8 +23,14 @@ module "rg" {
   location = var.location
   tags     = local.tags
 }
+<<<<<<< Updated upstream
 
 # 2) Network (VNet + Subnets)
+=======
+############################
+# Step 4) Network (VNet + Subnets)
+############################
+>>>>>>> Stashed changes
 module "network" {
   source              = "../../modules/network"
   name                = "${local.prefix}-vnet"
