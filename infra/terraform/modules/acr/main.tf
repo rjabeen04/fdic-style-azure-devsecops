@@ -12,6 +12,10 @@ resource "azurerm_container_registry" "this" {
   # ✅ CKV_AZURE_233
   zone_redundancy_enabled = true
 
+  # ✅ CKV_AZURE_166 - Image quarantine
+  quarantine_policy_enabled = true
+
+
   data_endpoint_enabled = true
 
   georeplications {
