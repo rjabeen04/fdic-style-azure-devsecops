@@ -26,6 +26,63 @@ module "log_analytics" {
   tags                = local.tags
 }
 
+locals {
+  env    = "dev"
+  prefix = "fdic-dev"
+  tags = {
+    environment = local.env
+    project     = "fdic-style-azure-devsecops"
+    managed_by  = "terraform"
+  }
+}
+
+module "rg" {
+  source   = "../../modules/rg"
+  name     = "${local.prefix}-rg"
+  location = var.location
+  tags     = local.tags
+}
+
+# ============================
+# Step 4: Network (VNet/Subnets)
+# ============================
+module "network" {
+  source              = "../../modules/network"
+  name                = "${local.prefix}-vnet"
+  location            = var.location
+  resource_group_name = module.rg.name
+
+  address_space = ["10.10.0.0/16"]
+
+  subnets = {
+    aks = {
+      address_prefixes                   = ["10.10.1.0/24"]
+      private_endpoint_policies_disabled = false
+    }
+
+    private_endpoints = {
+      address_prefixes                   = ["10.10.2.0/24"]
+      private_endpoint_policies_disabled = true
+    }
+
+    management = {
+      address_prefixes                   = ["10.10.3.0/24"]
+      private_endpoint_policies_disabled = false
+    }
+  }
+
+  tags = local.tags
+}
+
+module "log_analytics" {
+  source              = "../../modules/log_analytics"
+  name                = "${local.prefix}-law"
+  location            = var.location
+  resource_group_name = module.rg.name
+  tags                = local.tags
+}
+
+
 ############################
 # Phase 1 (dev): Foundation
 # Start wiring modules here
