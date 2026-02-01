@@ -30,6 +30,24 @@ variable "purge_protection_enabled" {
   type        = bool
   default     = true
 }
+variable "private_endpoint_enabled" {
+  description = "Create a private endpoint for Key Vault."
+  type        = bool
+  default     = true
+}
+
+variable "private_endpoint_subnet_id" {
+  description = "Subnet ID for the Key Vault private endpoint (usually private_endpoints subnet)."
+  type        = string
+  default     = null
+}
+
+variable "private_dns_zone_id" {
+  description = "Private DNS zone ID for privatelink.vaultcore.azure.net"
+  type        = string
+  default     = null
+}
+
 
 variable "public_network_access_enabled" {
   description = "Allow public access (enterprise usually false)."
