@@ -13,6 +13,13 @@ variable "resource_group_name" {
   type        = string
 }
 
+variable "nsg_name_prefix" {
+  description = "Prefix used to name NSGs (defaults to VNet name)."
+  type        = string
+  default     = null
+}
+
+
 variable "address_space" {
   description = "VNet address space."
   type        = list(string)
