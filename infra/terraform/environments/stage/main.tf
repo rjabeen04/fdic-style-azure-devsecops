@@ -1,10 +1,15 @@
+# ============================================
+# STAGE ENVIRONMENT - PLACEHOLDER
+# No resources are provisioned from this repo.
+# Demonstrates SDLC structure only.
+# ============================================
 
 ############################
 # Locals / Naming
 ############################
 locals {
-  env    = "dev"
-  prefix = "fdic-dev"
+  env    = "stage"
+  prefix = "fdic-stage"
   tags = {
     environment = local.env
     project     = "fdic-style-azure-devsecops"
@@ -27,7 +32,7 @@ module "log_analytics" {
 }
 
 ############################
-# Phase 1 (dev): Foundation
+# Phase 1 (stage): Foundation
 # Start wiring modules here
 ############################
 
