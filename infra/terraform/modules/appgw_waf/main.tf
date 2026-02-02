@@ -40,16 +40,30 @@ resource "azurerm_application_gateway" "this" {
   }
 
   backend_address_pool {
-    name = "backend-pool"
+  name = "backend-pool"
+
+  fqdns = [
+    var.backend_fqdn
+  ]
+} 
+  
+  # ✅ Trust backend cert chain (end-to-end TLS)
+  trusted_root_certificate {
+    name = "backend-root"
+    data = filebase64("${path.module}/backend-root.cer")
   }
 
+ # ✅ Backend HTTPS settings (end-to-end TLS)
   backend_http_settings {
-    name                  = "http-settings"
+    name                  = "https-settings"
     cookie_based_affinity = "Disabled"
-    port                  = 80
-    protocol              = "Http"
+    port                  = 443
+    protocol              = "Https"
     request_timeout       = 60
+
+    trusted_root_certificate_names = ["backend-root"]
   }
+
 
   # Demo cert (replace with Key Vault later)
   ssl_certificate {
