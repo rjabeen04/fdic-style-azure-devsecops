@@ -25,8 +25,8 @@ resource "azurerm_container_registry" "this" {
 
   # ✅ CKV_AZURE_166 - Image quarantine
   quarantine_policy {
-  enabled = true
- }
+    enabled = true
+  }
 
 
   # ✅ CKV_AZURE_167 - Cleanup untagged manifests

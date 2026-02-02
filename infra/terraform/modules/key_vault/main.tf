@@ -8,10 +8,10 @@ resource "azurerm_key_vault" "this" {
 
   sku_name = var.sku_name
 
-  purge_protection_enabled       = var.purge_protection_enabled
-  soft_delete_retention_days     = var.soft_delete_retention_days
-  enable_rbac_authorization      = true
-  public_network_access_enabled  = false
+  purge_protection_enabled      = var.purge_protection_enabled
+  soft_delete_retention_days    = var.soft_delete_retention_days
+  enable_rbac_authorization     = true
+  public_network_access_enabled = false
 
   network_acls {
     default_action = "Deny"
@@ -24,7 +24,7 @@ resource "azurerm_key_vault" "this" {
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
-  key_type     =  "RSA-HSM"
+  key_type     = "RSA-HSM"
   key_size     = var.key_size
 
   # ✅ CKV_AZURE_40 - set expiration date 
