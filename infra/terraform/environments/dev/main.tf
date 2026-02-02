@@ -50,11 +50,16 @@ module "network" {
       address_prefixes                   = ["10.10.3.0/24"]
       private_endpoint_policies_disabled = false
     }
+
+    # Required for Step 7
+    appgw = {
+      address_prefixes                   = ["10.10.4.0/24"]
+      private_endpoint_policies_disabled = false
+    }
   }
 
   tags = local.tags
 }
-
 
 # 3) Log Analytics
 module "log_analytics" {
@@ -64,10 +69,6 @@ module "log_analytics" {
   resource_group_name = module.rg.name
   tags                = local.tags
 }
-
-############################
-# Next modules (add later)
-############################
 
 ############################
 # Step 4) ACR (Container Registry)
@@ -80,6 +81,7 @@ module "acr" {
 
   tags = local.tags
 }
+
 ############################
 # Step 5a) Key Vault
 ############################
@@ -92,10 +94,6 @@ module "key_vault" {
   key_name        = "${replace(local.prefix, "-", "")}-des-key"
   key_size        = 2048
   key_expire_days = 365
-
-  # If your KV module supports private endpoint wiring later, you can add it:
-  # private_endpoint_enabled   = true
-  # private_endpoint_subnet_id = module.network.subnet_ids["private_endpoints"]
 
   tags = local.tags
 }
@@ -113,6 +111,7 @@ module "des" {
 
   tags = local.tags
 }
+
 ############################
 # Step 6) AKS
 ############################
@@ -128,7 +127,7 @@ module "aks" {
 
   log_analytics_workspace_id = module.log_analytics.workspace_id
   acr_id                     = module.acr.id
-  disk_encryption_set_id      = module.des.id
+  disk_encryption_set_id     = module.des.id
 
   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
 
@@ -140,6 +139,14 @@ module "aks" {
   tags = local.tags
 }
 
-
-# 7) AppGW + WAF (module later)
-# module "appgw_waf" { ... }
+############################
+# Step 7) AppGW + WAF (Planned)
+############################
+# module "appgw_waf" {
+#   source              = "../../modules/appgw_waf"
+#   name                = "${local.prefix}-appgw"
+#   location            = var.location
+#   resource_group_name = module.rg.name
+#   subnet_id           = module.network.subnet_ids["appgw"]
+#   tags                = local.tags
+# }
