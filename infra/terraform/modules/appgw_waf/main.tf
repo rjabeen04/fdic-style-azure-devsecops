@@ -22,17 +22,13 @@ resource "azurerm_application_gateway" "this" {
     subnet_id = var.subnet_id
   }
 
-  # ✅ Strong TLS policy (helps with CKV_AZURE_218 expectations)
+  # ✅ TLS policy (scanner-friendly)
   ssl_policy {
     policy_type = "Predefined"
     policy_name = "AppGwSslPolicy20170401S"
   }
 
-  frontend_port {
-    name = "fe-http"
-    port = 80
-  }
-
+  # ✅ HTTPS only
   frontend_port {
     name = "fe-https"
     port = 443
@@ -55,14 +51,14 @@ resource "azurerm_application_gateway" "this" {
     request_timeout       = 60
   }
 
-  # ✅ HTTPS cert (for demo); replace with Key Vault in real env
+  # Demo cert (replace with Key Vault later)
   ssl_certificate {
     name     = "dummy-cert"
     data     = filebase64("${path.module}/dummy.pfx")
     password = var.ssl_cert_password
   }
 
-  # ✅ HTTPS listener (secure)
+  # ✅ HTTPS listener only
   http_listener {
     name                           = "https-listener"
     frontend_ip_configuration_name = "frontend-ip"
@@ -71,33 +67,7 @@ resource "azurerm_application_gateway" "this" {
     ssl_certificate_name           = "dummy-cert"
   }
 
-  # ✅ HTTP listener (ONLY for redirect)
-  http_listener {
-    name                           = "http-listener"
-    frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "fe-http"
-    protocol                       = "Http"
-  }
-
-  # ✅ Redirect HTTP → HTTPS
-  redirect_configuration {
-    name                 = "http-to-https"
-    redirect_type        = "Permanent"
-    target_listener_name = "https-listener"
-    include_path         = true
-    include_query_string = true
-  }
-
-  # ✅ Rule: HTTP redirect
-  request_routing_rule {
-    name                        = "rule-http-redirect"
-    priority                    = 1
-    rule_type                   = "Basic"
-    http_listener_name          = "http-listener"
-    redirect_configuration_name = "http-to-https"
-  }
-
-  # ✅ Rule: HTTPS to backend
+  # ✅ HTTPS routing rule
   request_routing_rule {
     name                       = "routing-rule-https"
     priority                   = 10
