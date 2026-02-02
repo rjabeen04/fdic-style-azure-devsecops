@@ -20,14 +20,13 @@ resource "azurerm_key_vault" "this" {
 
   tags = var.tags
 }
-
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA-HSM"
   key_size     = var.key_size
 
-  # ✅ CKV_AZURE_40 - set expiration date 
+  # ✅ Fixes CKV_AZURE_40
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
   key_opts = [
@@ -37,7 +36,6 @@ resource "azurerm_key_vault_key" "des" {
     "unwrapKey",
   ]
 }
-
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
