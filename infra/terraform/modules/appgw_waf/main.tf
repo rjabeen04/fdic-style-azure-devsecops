@@ -22,7 +22,7 @@ resource "azurerm_application_gateway" "this" {
     subnet_id = var.subnet_id
   }
 
-  # ✅ ADD THIS: Fixes CKV_AZURE_218
+  # ✅ ADD THIS BLOCK - This satisfies CKV_AZURE_218
   ssl_policy {
     policy_type = "Predefined"
     policy_name = "AppGwSslPolicy20170401S" 
