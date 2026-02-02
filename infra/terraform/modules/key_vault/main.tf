@@ -24,7 +24,7 @@ resource "azurerm_key_vault" "this" {
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
-  key_type     = var.key_type
+  key_type     =  "RSA-HSM"
   key_size     = var.key_size
 
   # ✅ CKV_AZURE_40 - set expiration date 
