@@ -131,15 +131,15 @@ module "aks" {
 
   subnet_id = module.network.subnet_ids["aks"]
 
-  log_analytics_workspace_id = module.log_analytics.workspace_id
+  log_analytics_workspace_id = module.log_analytics_workspace_id
   acr_id                     = module.acr.id
   disk_encryption_set_id     = module.des.id
 
   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
 
-  node_count      = 2
-  vm_size         = "Standard_DS2_v2"
- 
+  node_count = 2
+  vm_size    = "Standard_DS2_v2"
+
   tags = local.tags
 }
 
