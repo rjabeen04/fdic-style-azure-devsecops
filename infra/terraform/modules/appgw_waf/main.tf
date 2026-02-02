@@ -22,20 +22,20 @@ resource "azurerm_application_gateway" "this" {
     subnet_id = var.subnet_id
   }
 
-  # ✅ ADD THIS BLOCK - This satisfies CKV_AZURE_218
+  # ✅ Strong TLS policy (helps with CKV_AZURE_218 expectations)
   ssl_policy {
     policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20170401S" 
+    policy_name = "AppGwSslPolicy20170401S"
   }
 
   frontend_port {
-    name = "https-port"
+    name = "fe-http"
+    port = 80
+  }
+
+  frontend_port {
+    name = "fe-https"
     port = 443
-  }
-
-  frontend_port {
-    name = "https-port"
-    port = 443 # ✅ Fixes CKV_AZURE_217 (Moving away from Port 80)
   }
 
   frontend_ip_configuration {
@@ -55,30 +55,52 @@ resource "azurerm_application_gateway" "this" {
     request_timeout       = 60
   }
 
-  # ✅ Added TLS Policy to fix CKV_AZURE_218
-  ssl_policy {
-    policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20170401S" 
+  # ✅ HTTPS cert (for demo); replace with Key Vault in real env
+  ssl_certificate {
+    name     = "dummy-cert"
+    data     = filebase64("${path.module}/dummy.pfx")
+    password = var.ssl_cert_password
   }
 
+  # ✅ HTTPS listener (secure)
   http_listener {
     name                           = "https-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "https-port"
-    protocol                       = "Https" # ✅ Changed to HTTPS
+    frontend_port_name             = "fe-https"
+    protocol                       = "Https"
     ssl_certificate_name           = "dummy-cert"
   }
 
-  # Note: In a real environment, you'd fetch this from Key Vault
-  ssl_certificate {
-    name     = "dummy-cert"
-    data     = filebase64("${path.module}/dummy.pfx") # You'll need a placeholder pfx file in the module folder
-    password = "password"
+  # ✅ HTTP listener (ONLY for redirect)
+  http_listener {
+    name                           = "http-listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "fe-http"
+    protocol                       = "Http"
   }
 
+  # ✅ Redirect HTTP → HTTPS
+  redirect_configuration {
+    name                 = "http-to-https"
+    redirect_type        = "Permanent"
+    target_listener_name = "https-listener"
+    include_path         = true
+    include_query_string = true
+  }
+
+  # ✅ Rule: HTTP redirect
   request_routing_rule {
-    name                       = "routing-rule"
-    priority                   = 1
+    name                        = "rule-http-redirect"
+    priority                    = 1
+    rule_type                   = "Basic"
+    http_listener_name          = "http-listener"
+    redirect_configuration_name = "http-to-https"
+  }
+
+  # ✅ Rule: HTTPS to backend
+  request_routing_rule {
+    name                       = "routing-rule-https"
+    priority                   = 10
     rule_type                  = "Basic"
     http_listener_name         = "https-listener"
     backend_address_pool_name  = "backend-pool"
