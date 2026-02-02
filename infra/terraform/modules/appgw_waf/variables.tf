@@ -21,6 +21,12 @@ variable "sku_name" {
   default     = "WAF_v2"
 }
 
+variable "ssl_cert_password" {
+  type      = string
+  sensitive = true
+}
+
+
 variable "sku_tier" {
   type        = string
   default     = "WAF_v2"
