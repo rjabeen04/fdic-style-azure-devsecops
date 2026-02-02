@@ -118,4 +118,11 @@ module "log_analytics" {
 # }
 
 # 7) AppGW + WAF (module later)
-# module "appgw_waf" { ... }
+# module "appgw_waf" {
+  source              = "../../modules/appgw_waf"
+  name                = "${local.prefix}-appgw"
+  location            = var.location
+  resource_group_name = module.rg.name
+  subnet_id           = module.network.subnet_ids["appgw"]
+  tags                = local.tags
+}
