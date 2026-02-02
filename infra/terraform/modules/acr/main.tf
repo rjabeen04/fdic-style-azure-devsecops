@@ -32,7 +32,7 @@ resource "azurerm_container_registry" "this" {
   # ✅ CKV_AZURE_167 - Cleanup untagged manifests
   retention_policy {
     enabled = true
-    days    = var.retention_days
+    days    = var.untagged_retention_days
   }
 
   # ✅ CKV_AZURE_164 - Signed/trusted images (content trust)
