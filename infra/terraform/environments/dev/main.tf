@@ -66,6 +66,23 @@ module "log_analytics" {
 }
 
 ############################
+# Step 5a) Key Vault
+############################
+module "key_vault" {
+  source              = "../../modules/key_vault"
+  name                = "${replace(local.prefix, "-", "")}kv"
+  location            = var.location
+  resource_group_name = module.rg.name
+
+  key_name        = "${replace(local.prefix, "-", "")}-des-key"
+  key_size        = 2048
+  key_expire_days = 365
+
+  tags = local.tags
+}
+
+
+############################
 # Next modules (add later)
 ############################
 
@@ -102,8 +119,6 @@ module "des" {
   tags = local.tags
 }
 
-
-# 6) AKS (module later)
 # NOTE: Keep commented until acr/des outputs exist.
 # module "aks" {
 #   source = "../../modules/aks"
