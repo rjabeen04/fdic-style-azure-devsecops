@@ -38,7 +38,7 @@ resource "azurerm_key_vault_key" "des" {
   ]
 }
 
-resource "azurerm_private_endpoint" "kv" {
+resource "azurerm_private_endpoint_private_dns_zone_group" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
   location            = var.location
