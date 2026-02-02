@@ -23,8 +23,8 @@ resource "azurerm_application_gateway" "this" {
   }
 
   frontend_port {
-    name = "http-port"
-    port = 80
+    name = "https-port"
+    port = 443 # ✅ Fixes CKV_AZURE_217 (Moving away from Port 80)
   }
 
   frontend_ip_configuration {
@@ -44,18 +44,32 @@ resource "azurerm_application_gateway" "this" {
     request_timeout       = 60
   }
 
+  # ✅ Added TLS Policy to fix CKV_AZURE_218
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20170401S" 
+  }
+
   http_listener {
-    name                           = "http-listener"
+    name                           = "https-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "http-port"
-    protocol                       = "Http"
+    frontend_port_name             = "https-port"
+    protocol                       = "Https" # ✅ Changed to HTTPS
+    ssl_certificate_name           = "dummy-cert"
+  }
+
+  # Note: In a real environment, you'd fetch this from Key Vault
+  ssl_certificate {
+    name     = "dummy-cert"
+    data     = filebase64("${path.module}/dummy.pfx") # You'll need a placeholder pfx file in the module folder
+    password = "password"
   }
 
   request_routing_rule {
     name                       = "routing-rule"
     priority                   = 1
     rule_type                  = "Basic"
-    http_listener_name         = "http-listener"
+    http_listener_name         = "https-listener"
     backend_address_pool_name  = "backend-pool"
     backend_http_settings_name = "http-settings"
   }
