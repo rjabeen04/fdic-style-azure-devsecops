@@ -139,9 +139,7 @@ module "aks" {
 
   node_count      = 2
   vm_size         = "Standard_DS2_v2"
-  user_node_count = 2
-  user_vm_size    = "Standard_DS2_v2"
-
+ 
   tags = local.tags
 }
 
