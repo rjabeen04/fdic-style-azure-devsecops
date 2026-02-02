@@ -131,3 +131,40 @@ module "des" {
 
 # 7) AppGW + WAF (module later)
 # module "appgw_waf" { ... }
+############################
+# 6) AKS (Kubernetes Cluster)
+# NOTE: Keep commented until ACR and DES outputs exist
+############################
+
+# module "aks" {
+#   source = "../../modules/aks"
+#
+#   name                = "${local.prefix}-aks"
+#   location            = var.location
+#   resource_group_name = module.rg.name
+#   dns_prefix          = local.prefix
+#
+#   # Networking
+#   subnet_id = module.network.subnet_ids["aks"]
+#
+#   # Monitoring
+#   log_analytics_workspace_id = module.log_analytics.workspace_id
+#
+#   # Container Registry
+#   acr_id = module.acr.id
+#
+#   # Disk Encryption
+#   disk_encryption_set_id = module.des.id
+#
+#   # Security
+#   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
+#
+#   # Node Pools
+#   node_count      = 2
+#   vm_size         = "Standard_DS2_v2"
+#   user_node_count = 2
+#   user_vm_size    = "Standard_DS2_v2"
+#
+#   tags = local.tags
+# }
+
