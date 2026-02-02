@@ -51,7 +51,6 @@ module "network" {
       private_endpoint_policies_disabled = false
     }
 
-    # Added to prepare for Step 7 wiring
     appgw = {
       address_prefixes                   = ["10.10.4.0/24"]
       private_endpoint_policies_disabled = false
@@ -111,11 +110,11 @@ module "des" {
 ############################
 # Step 5c) Security Handshake (RBAC)
 ############################
-# This allows the DES to actually use the KV keys to encrypt AKS disks
 resource "azurerm_role_assignment" "des_kv_crypto" {
   scope                = module.key_vault.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = module.des.principal_id
+  # Fix: Changed to .id because 'principal_id' wasn't exported by your module
+  principal_id         = module.des.id 
 }
 
 ############################
@@ -131,7 +130,8 @@ module "aks" {
 
   subnet_id = module.network.subnet_ids["aks"]
 
-  log_analytics_workspace_id = module.log_analytics_workspace_id
+  # Fix: Added the dot between module name and output attribute
+  log_analytics_workspace_id = module.log_analytics.workspace_id
   acr_id                     = module.acr.id
   disk_encryption_set_id     = module.des.id
 
