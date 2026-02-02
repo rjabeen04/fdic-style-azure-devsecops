@@ -25,7 +25,7 @@ module "rg" {
 }
 
 ############################
-# Step 2) Network (VNet + Subnets)
+# Step 4) Network (VNet + Subnets)
 ############################
 module "network" {
   source              = "../../modules/network"
@@ -55,8 +55,7 @@ module "network" {
   tags = local.tags
 }
 
-
-# 3) Log Analytics
+# 3) Log Analytics (AKS will reference this later)
 module "log_analytics" {
   source              = "../../modules/log_analytics"
   name                = "${local.prefix}-law"
@@ -64,32 +63,24 @@ module "log_analytics" {
   resource_group_name = module.rg.name
   tags                = local.tags
 }
+############################
+# Step 4) ACR (Container Registry)
+############################
+module "acr" {
+  source              = "../../modules/acr"
+  name                = "${replace(local.prefix, "-", "")}acr"
+  location            = var.location
+  resource_group_name = module.rg.name
+
+  # Later if you add Private Endpoint:
+  # private_endpoint_subnet_id = module.network.subnet_ids["private_endpoints"]
+
+  tags = local.tags
+}
 
 ############################
 # Next modules (add later)
 ############################
-
-# 4) ACR (module later)
-# module "acr" {
-#   source              = "../../modules/acr"
-#   name                = "${local.prefix}-acr"
-#   location            = var.location
-#   resource_group_name = module.rg.name
-#
-#   # If your ACR module supports private endpoint wiring later:
-#   # private_endpoint_subnet_id = module.network.subnet_ids["private_endpoints"]
-#
-#   tags = local.tags
-# }
-
-# 5) Disk Encryption Set + Key Vault Key (module later)
-# module "des" {
-#   source              = "../../modules/des"
-#   name                = "${local.prefix}-des"
-#   location            = var.location
-#   resource_group_name = module.rg.name
-#   tags                = local.tags
-# }
 
 # 6) AKS (module later)
 # NOTE: Keep commented until acr/des outputs exist.
