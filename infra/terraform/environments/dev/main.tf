@@ -91,6 +91,18 @@ module "log_analytics" {
 #   tags                = local.tags
 # }
 
+module "des" {
+  source              = "../../modules/des"
+  name                = "${local.prefix}-des"
+  location            = var.location
+  resource_group_name = module.rg.name
+
+  key_vault_key_id = module.key_vault.key_id
+
+  tags = local.tags
+}
+
+
 # 6) AKS (module later)
 # NOTE: Keep commented until acr/des outputs exist.
 # module "aks" {
