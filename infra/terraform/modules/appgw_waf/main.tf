@@ -48,7 +48,6 @@ resource "azurerm_application_gateway" "this" {
     request_timeout                = 60
   }
 
-  # --- SSL CERTIFICATE BLOCK REMOVED ---
 
   http_listener {
     name                           = "http-listener"
