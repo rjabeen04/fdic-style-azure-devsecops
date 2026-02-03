@@ -1,0 +1,49 @@
+name: Terraform CD (Deploy)
+
+on:
+  push:
+    branches: ["main"] # Runs only after a PR is merged
+    paths:
+      - "infra/terraform/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Terraform-Apply
+    runs-on: ubuntu-latest
+    
+    # We use the dev environment to ensure secrets are pulled correctly
+    environment: dev 
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+          terraform_wrapper: false
+
+      - name: Terraform Apply
+        working-directory: infra/terraform/environments/dev
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_USE_OIDC: false
+        run: |
+          terraform init -reconfigure -input=false
+          # The -auto-approve flag is the "CD" magic—it deploys without asking "yes"
+          terraform apply -auto-approve -input=false
