@@ -13,10 +13,9 @@ locals {
 }
 
 ############################
-# Phase 1 (dev): Foundation
+# Phase 1: Foundation
 ############################
 
-# 1) Resource Group
 module "rg" {
   source   = "../../modules/rg"
   name     = "${local.prefix}-rg"
@@ -24,39 +23,22 @@ module "rg" {
   tags     = local.tags
 }
 
-############################
-# Step 2) Network (VNet + Subnets)
-############################
 module "network" {
   source              = "../../modules/network"
   name                = "${local.prefix}-vnet"
   location            = var.location
   resource_group_name = module.rg.name
-
-  address_space = ["10.10.0.0/16"]
+  address_space       = ["10.10.0.0/16"]
 
   subnets = {
-    aks = {
-      address_prefixes                   = ["10.10.1.0/24"]
-      private_endpoint_policies_disabled = false
-    }
-
-    private_endpoints = {
-      address_prefixes                   = ["10.10.2.0/24"]
-      private_endpoint_policies_disabled = true
-    }
-
-    management = {
-      address_prefixes                   = ["10.10.3.0/24"]
-      private_endpoint_policies_disabled = false
-    }
+    aks               = { address_prefixes = ["10.10.1.0/24"] }
+    private_endpoints = { address_prefixes = ["10.10.2.0/24"] }
+    management        = { address_prefixes = ["10.10.3.0/24"] }
+    appgw             = { address_prefixes = ["10.10.4.0/24"] }
   }
-
   tags = local.tags
 }
 
-
-# 3) Log Analytics
 module "log_analytics" {
   source              = "../../modules/log_analytics"
   name                = "${local.prefix}-law"
@@ -66,56 +48,47 @@ module "log_analytics" {
 }
 
 ############################
-# Next modules (add later)
+# Phase 2: Security & Storage
 ############################
 
-# 4) ACR (module later)
-# module "acr" {
-#   source              = "../../modules/acr"
-#   name                = "${local.prefix}-acr"
-#   location            = var.location
-#   resource_group_name = module.rg.name
-#
-#   # If your ACR module supports private endpoint wiring later:
-#   # private_endpoint_subnet_id = module.network.subnet_ids["private_endpoints"]
-#
-#   tags = local.tags
-# }
+# 4) Azure Container Registry (For your musical-volunteer images)
+module "acr" {
+  source              = "../../modules/acr"
+  name                = "acr${replace(local.prefix, "-", "")}" # ACR names must be alphanumeric
+  location            = var.location
+  resource_group_name = module.rg.name
+  tags                = local.tags
+}
 
-# 5) Disk Encryption Set + Key Vault Key (module later)
-# module "des" {
-#   source              = "../../modules/des"
-#   name                = "${local.prefix}-des"
-#   location            = var.location
-#   resource_group_name = module.rg.name
-#   tags                = local.tags
-# }
+# 5) Key Vault (The Secret Store)
+module "key_vault" {
+  source              = "../../modules/key_vault"
+  name                = "${local.prefix}-kv"
+  location            = var.location
+  resource_group_name = module.rg.name
+  tags                = local.tags
+}
 
-# 6) AKS (module later)
-# NOTE: Keep commented until acr/des outputs exist.
-# module "aks" {
-#   source = "../../modules/aks"
-#
-#   name                = "${local.prefix}-aks"
-#   location            = var.location
-#   resource_group_name = module.rg.name
-#   dns_prefix          = local.prefix
-#
-#   subnet_id = module.network.subnet_ids["aks"]
-#
-#   log_analytics_workspace_id = module.log_analytics.workspace_id
-#   acr_id                     = module.acr.id
-#   disk_encryption_set_id      = module.des.id
-#
-#   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
-#
-#   node_count      = 2
-#   vm_size         = "Standard_DS2_v2"
-#   user_node_count = 2
-#   user_vm_size    = "Standard_DS2_v2"
-#
-#   tags = local.tags
-# }
+# 6) Disk Encryption Set (The Security bridge)
+module "des" {
+  source              = "../../modules/des"
+  name                = "${local.prefix}-des"
+  location            = var.location
+  resource_group_name = module.rg.name
+  key_vault_id        = module.key_vault.id # Links DES to the Vault
+  tags                = local.tags
+}
 
-# 7) AppGW + WAF (module later)
-# module "appgw_waf" { ... }
+############################
+# Phase 3: Traffic (The App Gateway)
+############################
+
+module "appgw_waf" {
+  source              = "../../modules/appgw_waf"
+  name                = "${local.prefix}-appgw"
+  resource_group_name = module.rg.name
+  location            = var.location
+  # Pulls the specific subnet created in the network module
+  subnet_id           = module.network.subnet_ids["appgw"]
+  tags                = local.tags
+}
