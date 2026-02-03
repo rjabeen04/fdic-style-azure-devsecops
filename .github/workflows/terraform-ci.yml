@@ -93,10 +93,10 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_USE_OIDC: true  # This tells Terraform to use the login from the previous step
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }} # Add this line!
+          ARM_USE_OIDC: true
         run: |
           terraform fmt -check -recursive
-          # Remove -backend=false and add -reconfigure
           terraform init -reconfigure
           terraform validate
           terraform plan -no-color
