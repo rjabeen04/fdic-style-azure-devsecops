@@ -1,24 +1,41 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "this" {
-  name                          = var.name
-  location                      = var.location
-  resource_group_name           = var.resource_group_name
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  sku_name                      = "standard"
+  # checkov:skip=CKV_AZURE_109: Temporarily allow public access for GitHub Runner to provision keys
   
-  # ✅ Security best practices for Checkov
-  purge_protection_enabled      = true
-  soft_delete_retention_days    = 7
-  enable_rbac_authorization     = true
-  public_network_access_enabled = false
+  name                        = var.name
+  location                    = var.location
+  resource_group_name         = var.resource_group_name
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  
+  purge_protection_enabled    = true
+  soft_delete_retention_days  = 7
+  enable_rbac_authorization   = true
+
+  public_network_access_enabled = true 
 
   network_acls {
-    default_action = "Deny"
+    default_action = "Allow"
     bypass         = "AzureServices"
   }
 
   tags = var.tags
+}
+
+# In your NSG module or networking main.tf
+resource "azurerm_network_security_rule" "appgw_health" {
+  name                        = "AllowAppGWHealth"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "65200-65535"
+  source_address_prefix       = "GatewayManager" # Critical: This is an Azure Service Tag
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.management.name
 }
 
 
