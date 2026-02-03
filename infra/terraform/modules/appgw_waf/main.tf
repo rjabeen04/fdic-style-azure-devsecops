@@ -7,7 +7,7 @@ resource "azurerm_public_ip" "pip" {
 }
 
 # modules/appgw_waf/main.tf
-# bridgecrew:skip=CKV_AZURE_217:Allowing HTTP for initial bootstrap. SSL/HTTPS to be configured in Phase 4.
+# bridgecrew:skip=CKV_AZURE_217:Allowing HTTP for initial dev bootstrap. HTTPS/SSL will be configured in the next phase.
 resource "azurerm_application_gateway" "this" {
 # checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment to bypass PFX certificate errors.
 # checkov:skip=CKV_AZURE_218: Manual override for TLS policy.
