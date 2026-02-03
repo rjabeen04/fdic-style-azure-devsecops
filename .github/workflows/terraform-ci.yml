@@ -55,9 +55,9 @@ jobs:
           framework: terraform
           quiet: true
           soft_fail: false
-          # --- ADD THE LINE BELOW ---
+          # --- ADD THIS LINE ---
           skip_check: CKV_AZURE_218
-          # ---------------------------
+          # --------------------
           output_format: sarif
           output_file_path: results.sarif
 
