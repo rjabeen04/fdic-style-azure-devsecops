@@ -44,18 +44,12 @@ resource "azurerm_application_gateway" "this" {
     fqdns = [var.backend_fqdn]
   }
 
-  trusted_root_certificate {
-    name = "backend-root"
-    data = var.backend_root_cert_data
-  }
-
   backend_http_settings {
     name                           = "https-settings"
     cookie_based_affinity          = "Disabled"
-    port                           = 443
-    protocol                       = "Https"
+    port                           = 80
+    protocol                       = "Http"
     request_timeout                = 60
-    trusted_root_certificate_names = ["backend-root"]
   }
 
   ssl_certificate {
