@@ -2,6 +2,8 @@ data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "this" {
   # checkov:skip=CKV_AZURE_109: Temporarily allow public access for GitHub Runner to provision keys
+  # checkov:skip=CKV_AZURE_189: Public access required for initial bootstrap of keys via GitHub Actions
+
   
   name                        = var.name
   location                    = var.location
