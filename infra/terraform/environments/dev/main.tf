@@ -86,7 +86,7 @@ module "des" {
 # Phase 3: Traffic (The App Gateway)
 ############################
 
-# 7) AppGW + WAF - Fixed with SSL argument
+# 7) AppGW + WAF - Fully satisfied with all required "dummy" variables
 module "appgw_waf" {
   source              = "../../modules/appgw_waf"
   name                = "${local.prefix}-appgw"
@@ -94,9 +94,12 @@ module "appgw_waf" {
   location            = var.location
   subnet_id           = module.network.subnet_ids["appgw"]
   
-  # Added to satisfy the module requirement
-  # In a real production scenario, we would pull this from Key Vault
-  ssl_cert_password   = "DummyPassword123!" 
-  
+  # These fix the "Undeclared input variable" errors from your last log
+  backend_fqdn              = "musical-volunteer.local"
+  backend_root_cert_data    = "" 
+  frontend_cert_pfx_base64  = ""
+  frontend_cert_password    = "DummyPassword123!"
+  ssl_cert_password         = "DummyPassword123!"
+
   tags                = local.tags
 }
