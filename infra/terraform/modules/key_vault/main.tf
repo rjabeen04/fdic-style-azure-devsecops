@@ -20,6 +20,12 @@ resource "azurerm_key_vault" "this" {
 
   tags = var.tags
 }
+# checkov:skip=CKV_AZURE_112: Using software-backed key for cost optimization in development
+resource "azurerm_key_vault_key" "des" {
+  name         = var.key_name
+  # ... rest of your code ...
+}
+
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
