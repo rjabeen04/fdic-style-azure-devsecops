@@ -83,12 +83,17 @@ module "des" {
 # Phase 3: Traffic (The App Gateway)
 ############################
 
+# 7) AppGW + WAF - Fixed with SSL argument
 module "appgw_waf" {
   source              = "../../modules/appgw_waf"
   name                = "${local.prefix}-appgw"
   resource_group_name = module.rg.name
   location            = var.location
-  # Pulls the specific subnet created in the network module
   subnet_id           = module.network.subnet_ids["appgw"]
+  
+  # Added to satisfy the module requirement
+  # In a real production scenario, we would pull this from Key Vault
+  ssl_cert_password   = "DummyPassword123!" 
+  
   tags                = local.tags
 }
