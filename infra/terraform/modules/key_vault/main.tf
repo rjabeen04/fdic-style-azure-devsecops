@@ -21,6 +21,7 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
+
 resource "azurerm_key_vault_key" "des" {
   # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
   # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
