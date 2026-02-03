@@ -29,6 +29,7 @@ variable "sku_tier" {
 variable "ssl_cert_password" {
   type      = string
   sensitive = true
+  default   = null
 }
 
 # --- MISSING VARIABLES ADDED BELOW ---

@@ -66,6 +66,7 @@ module "log_analytics" {
 }
 
 
+
 ###########################################################
 # Phase 2: Security & Storage
 ###########################################################
@@ -135,7 +136,7 @@ module "appgw_waf" {
   resource_group_name = module.rg.name
   
   subnet_id           = module.network.subnet_ids["management"]
-  ssl_cert_password   = var.ssl_cert_password 
+  backend_fqdn        = "myapp.internal"
   
   tags = local.tags
 }
