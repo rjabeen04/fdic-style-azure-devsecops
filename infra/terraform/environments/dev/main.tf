@@ -138,7 +138,6 @@ module "appgw_waf" {
   
   subnet_id           = module.network.subnet_ids["management"]
   backend_fqdn        = "myapp.internal"
-  ssl_cert_password   = var.ssl_cert_password 
   
   tags = local.tags
 }
