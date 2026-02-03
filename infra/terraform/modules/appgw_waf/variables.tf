@@ -21,15 +21,37 @@ variable "sku_name" {
   default     = "WAF_v2"
 }
 
+variable "sku_tier" {
+  type        = string
+  default     = "WAF_v2"
+}
+
 variable "ssl_cert_password" {
   type      = string
   sensitive = true
 }
 
+# --- MISSING VARIABLES ADDED BELOW ---
 
-variable "sku_tier" {
+variable "backend_fqdn" {
   type        = string
-  default     = "WAF_v2"
+  default     = "musical-volunteer.local"
+}
+
+variable "backend_root_cert_data" {
+  type        = string
+  default     = ""
+}
+
+variable "frontend_cert_pfx_base64" {
+  type        = string
+  default     = ""
+}
+
+variable "frontend_cert_password" {
+  type      = string
+  sensitive = true
+  default   = ""
 }
 
 variable "tags" {
