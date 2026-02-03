@@ -5,6 +5,8 @@ on:
     branches: ["main"] # Runs only after a PR is merged
     paths:
       - "infra/terraform/**"
+      - "modules/**"
+      - "environments/**"
 
 permissions:
   contents: read
