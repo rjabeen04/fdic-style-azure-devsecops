@@ -6,8 +6,8 @@ resource "azurerm_public_ip" "pip" {
   sku                 = "Standard"
 }
 
-# checkov:skip=CKV_AZURE_218: Manual override for dev.
-# checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment.
+# checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment to bypass PFX certificate requirements.
+# checkov:skip=CKV_AZURE_218: Manual override for dev environment.
 resource "azurerm_application_gateway" "this" {
   name                = var.name
   resource_group_name = var.resource_group_name
