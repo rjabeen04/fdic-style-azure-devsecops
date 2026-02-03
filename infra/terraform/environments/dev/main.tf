@@ -128,7 +128,6 @@ module "aks" {
 
   tags = local.tags
 }
-
 # 8) App Gateway + WAF
 module "appgw_waf" {
   source              = "../../modules/appgw_waf"
@@ -137,9 +136,12 @@ module "appgw_waf" {
   resource_group_name = module.rg.name
   
   subnet_id           = module.network.subnet_ids["management"]
-  tags                = local.tags
+  
+  # ✅ Add this line to fix the error
+  ssl_cert_password   = var.ssl_cert_password 
+  
+  tags = local.tags
 }
-
 
 
 
