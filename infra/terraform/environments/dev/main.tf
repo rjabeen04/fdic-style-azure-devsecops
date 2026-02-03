@@ -119,8 +119,6 @@ module "appgw_waf" {
   tags                      = local.tags
 }
 
-# 8) AKS (The Cluster)
-# Note: This will take ~10-15 minutes to deploy
 module "aks" {
   source = "../../modules/aks"
 
@@ -133,12 +131,14 @@ module "aks" {
 
   log_analytics_workspace_id = module.log_analytics.workspace_id
   acr_id                     = module.acr.id
-  disk_encryption_set_id      = module.des.id
+  disk_encryption_set_id     = module.des.id
 
+  # FIX 1: Added the required IP ranges (Allowing all for now, adjust for security)
+  api_server_authorized_ip_ranges = ["0.0.0.0/0"] 
+
+  # FIX 2: Standardizing node count (removed the 'user_' prefix errors)
   node_count      = 2
   vm_size         = "Standard_DS2_v2"
-  user_node_count = 2
-  user_vm_size    = "Standard_DS2_v2"
 
   tags = local.tags
 }
