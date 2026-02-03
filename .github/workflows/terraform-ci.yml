@@ -89,8 +89,14 @@ jobs:
       - name: Terraform fmt/validate/plan (dev)
         if: steps.changes.outputs.terraform == 'true'
         working-directory: infra/terraform/environments/dev
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_USE_OIDC: true  # This tells Terraform to use the login from the previous step
         run: |
           terraform fmt -check -recursive
-          terraform init -backend=false
+          # Remove -backend=false and add -reconfigure
+          terraform init -reconfigure
           terraform validate
           terraform plan -no-color
