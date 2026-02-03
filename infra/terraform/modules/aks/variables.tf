@@ -45,6 +45,15 @@ variable "vm_size" {
   type    = string
   default = "Standard_DS2_v2"
 }
+variable "user_vm_size" {
+  type    = string
+  default = "Standard_DS2_v2"
+}
+
+variable "user_node_count" {
+  type    = number
+  default = 2
+}
 
 variable "tags" {
   type    = map(string)
