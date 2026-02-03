@@ -69,13 +69,16 @@ module "key_vault" {
   tags                = local.tags
 }
 
-# 6) Disk Encryption Set (The Security bridge)
+# 6) Disk Encryption Set - Fixed arguments
 module "des" {
   source              = "../../modules/des"
   name                = "${local.prefix}-des"
   location            = var.location
   resource_group_name = module.rg.name
-  key_vault_id        = module.key_vault.id # Links DES to the Vault
+  
+  # Changed from key_vault_id to the specific key ID the module expects
+  key_vault_key_id    = module.key_vault.key_id 
+  
   tags                = local.tags
 }
 
