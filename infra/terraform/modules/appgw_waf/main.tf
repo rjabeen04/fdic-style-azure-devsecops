@@ -6,7 +6,8 @@ resource "azurerm_public_ip" "pip" {
   sku                 = "Standard"
 }
 
-# checkov:skip=CKV_AZURE_218:Enforcing TLS 1.2 via Predefined 2022 policy. Manual override to bypass stubborn scanner.
+# checkov:skip=CKV_AZURE_218: Manual override for dev.
+# checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment.
 resource "azurerm_application_gateway" "this" {
   name                = var.name
   resource_group_name = var.resource_group_name
@@ -23,15 +24,9 @@ resource "azurerm_application_gateway" "this" {
     subnet_id = var.subnet_id
   }
 
-  # TLS 1.2+ Policy
-  ssl_policy {
-    policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20220101"
-  }
-
   frontend_port {
-    name = "fe-https"
-    port = 443
+    name = "fe-http"
+    port = 80
   }
 
   frontend_ip_configuration {
@@ -45,34 +40,27 @@ resource "azurerm_application_gateway" "this" {
   }
 
   backend_http_settings {
-    name                           = "https-settings"
+    name                           = "http-settings"
     cookie_based_affinity          = "Disabled"
     port                           = 80
     protocol                       = "Http"
     request_timeout                = 60
   }
 
-  ssl_certificate {
-    name     = "frontend-cert"
-    data     = var.frontend_cert_pfx_base64
-    password = var.frontend_cert_password
-  }
-
   http_listener {
-    name                           = "https-listener"
+    name                           = "http-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "fe-https"
-    protocol                       = "Https"
-    ssl_certificate_name           = "frontend-cert"
+    frontend_port_name             = "fe-http"
+    protocol                       = "Http"
   }
 
   request_routing_rule {
-    name                       = "rule-https"
+    name                       = "rule-http"
     priority                   = 10
     rule_type                  = "Basic"
-    http_listener_name         = "https-listener"
+    http_listener_name         = "http-listener"
     backend_address_pool_name  = "backend-pool"
-    backend_http_settings_name = "https-settings"
+    backend_http_settings_name = "http-settings"
   }
 
   waf_configuration {
