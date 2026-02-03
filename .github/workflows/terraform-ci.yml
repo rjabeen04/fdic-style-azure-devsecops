@@ -55,9 +55,8 @@ jobs:
           framework: terraform
           quiet: true
           soft_fail: false
-          # --- ADD THIS LINE ---
+          # ✅ Bypassing the stubborn App Gateway TLS rule
           skip_check: CKV_AZURE_218
-          # --------------------
           output_format: sarif
           output_file_path: results.sarif
 
@@ -97,9 +96,17 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_USE_OIDC: false # Change this to false!
+          # ✅ Set to false to prioritize the Secret over OIDC for the Terraform Provider
+          ARM_USE_OIDC: false 
         run: |
+          # 1. Format code (recursive formatting without failing the build)
           terraform fmt -recursive
+          
+          # 2. Reconfigure backend to ensure it locks in the Storage Account settings
           terraform init -reconfigure -input=false
+          
+          # 3. Validate configuration
           terraform validate
+          
+          # 4. Generate the plan
           terraform plan -no-color -input=false
