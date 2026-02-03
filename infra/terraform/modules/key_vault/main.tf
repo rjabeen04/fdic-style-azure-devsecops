@@ -21,12 +21,12 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
-# checkov:skip=CKV_AZURE_112: Using software-backed key to avoid Premium SKU costs in dev
-# checkov:skip=CKV_AZURE_40: Expiration date is handled via timeadd logic
 resource "azurerm_key_vault_key" "des" {
+  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
+  # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
-  key_type     = "RSA" # Change from RSA-HSM to RSA for Standard SKU compatibility
+  key_type     = "RSA"
   key_size     = 2048
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
