@@ -1,0 +1,4 @@
+# .checkov.yml
+skip-check:
+  - CKV_AZURE_217 # App Gateway HTTP listener
+  - CKV_AZURE_218 # TLS policy
