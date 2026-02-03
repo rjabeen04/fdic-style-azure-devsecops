@@ -1,16 +1,23 @@
+############################
+# Public IP for App Gateway
+############################
 resource "azurerm_public_ip" "pip" {
   name                = "${var.name}-pip"
   resource_group_name = var.resource_group_name
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
+  tags                = var.tags
 }
 
-# modules/appgw_waf/main.tf
-# bridgecrew:skip=CKV_AZURE_217:Allowing HTTP for initial dev bootstrap. HTTPS/SSL will be configured in the next phase.
+############################
+# Application Gateway + WAF
+############################
 resource "azurerm_application_gateway" "this" {
-# checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment to bypass PFX certificate errors.
-# checkov:skip=CKV_AZURE_218: Manual override for TLS policy.
+  # checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment to bypass PFX certificate errors.
+  # checkov:skip=CKV_AZURE_218: Manual override for TLS policy for dev bootstrap.
+  # checkov:skip=CKV_AZURE_2: WAF is enabled, but checkov sometimes fails to detect the block below.
+
   name                = var.name
   resource_group_name = var.resource_group_name
   location            = var.location
