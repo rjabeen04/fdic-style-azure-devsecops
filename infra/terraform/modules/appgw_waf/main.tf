@@ -25,7 +25,7 @@ resource "azurerm_application_gateway" "this" {
   # ✅ TLS 1.2+ Policy (helps CKV_AZURE_218)
   ssl_policy {
     policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20170401S"
+    policy_name = "AppGwSslPolicy20220101"
   }
 
   # ✅ Frontend HTTPS only
