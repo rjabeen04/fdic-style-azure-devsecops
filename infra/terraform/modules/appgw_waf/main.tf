@@ -6,9 +6,9 @@ resource "azurerm_public_ip" "pip" {
   sku                 = "Standard"
 }
 
+resource "azurerm_application_gateway" "this" {
 # checkov:skip=CKV_AZURE_217: Using HTTP for initial deployment to bypass PFX certificate errors.
 # checkov:skip=CKV_AZURE_218: Manual override for TLS policy.
-resource "azurerm_application_gateway" "this" {
   name                = var.name
   resource_group_name = var.resource_group_name
   location            = var.location
