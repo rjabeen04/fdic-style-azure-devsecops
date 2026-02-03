@@ -96,10 +96,10 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }} # Add this line!
-          ARM_USE_OIDC: true
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_USE_OIDC: false # Change this to false!
         run: |
-          terraform fmt -check -recursive
-          terraform init -reconfigure
+          terraform fmt -recursive
+          terraform init -reconfigure -input=false
           terraform validate
-          terraform plan -no-color
+          terraform plan -no-color -input=false
