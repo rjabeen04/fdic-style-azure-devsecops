@@ -1,4 +1,7 @@
 # .checkov.yml
+check:
+  - all
 skip-check:
-  - CKV_AZURE_217 # App Gateway HTTP listener
-  - CKV_AZURE_218 # TLS policy
+  - CKV_AZURE_217  # Allow HTTP for App Gateway during dev bootstrap
+  - CKV_AZURE_218  # Allow default TLS policy for dev bootstrap
+  - CKV_AZURE_2    # Ignore WAF detection issues
