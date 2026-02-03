@@ -50,22 +50,14 @@ resource "azurerm_private_endpoint" "kv" {
     is_manual_connection           = false
   }
 
+  # This replaces the two broken standalone resources
+  dynamic "private_dns_zone_group" {
+    for_each = var.private_dns_zone_id != null ? [1] : []
+    content {
+      name                 = "default"
+      private_dns_zone_ids = [var.private_dns_zone_id]
+    }
+  }
+
   tags = var.tags
-}
-
-resource "azurerm_private_endpoint_private_dns_zone_group" "kv" {
-  count               = var.private_dns_zone_id != null ? 1 : 0
-  name                = "default"
-  private_endpoint_id = azurerm_private_endpoint.kv[0].id
-
-  private_dns_zone_ids = [var.private_dns_zone_id]
-}
-
-
-resource "azurerm_private_dns_zone_group" "kv" {
-  count               = var.private_endpoint_enabled && var.private_dns_zone_id != null ? 1 : 0
-  name                = "default"
-  private_endpoint_id = azurerm_private_endpoint.kv[0].id
-
-  private_dns_zone_ids = [var.private_dns_zone_id]
 }
