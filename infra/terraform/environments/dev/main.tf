@@ -65,9 +65,6 @@ module "log_analytics" {
   tags                = local.tags
 }
 
-############################
-# Next modules (add later)
-############################
 ###########################################################
 # Phase 2: Security & Storage
 ###########################################################
@@ -130,17 +127,17 @@ module "aks" {
 }
 
 # 8) App Gateway + WAF
-# module "appgw_waf" {
-# source              = "../../modules/appgw_waf"
-# name                = "${local.prefix}-appgw"
-# location            = var.location
- # resource_group_name = module.rg.name
+ module "appgw_waf" {
+ source              = "../../modules/appgw_waf"
+ name                = "${local.prefix}-appgw"
+ location            = var.location
+ resource_group_name = module.rg.name
   
- # subnet_id           = module.network.subnet_ids["management"]
- # backend_fqdn        = "myapp.internal"
+ subnet_id           = module.network.subnet_ids["management"]
+ backend_fqdn        = "myapp.internal"
   
- # tags = local.tags
-#}
+  tags = local.tags
+}
 
 
 
