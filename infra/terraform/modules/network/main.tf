@@ -41,3 +41,19 @@ resource "azurerm_subnet_network_security_group_association" "this" {
   subnet_id                 = azurerm_subnet.this[each.key].id
   network_security_group_id = azurerm_network_security_group.this[each.key].id
 }
+# This rule targets specifically the 'management' NSG created in the loop
+resource "azurerm_network_security_rule" "appgw_health" {
+  name                        = "AllowAppGWHealth"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "65200-65535"
+  source_address_prefix       = "GatewayManager"
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  
+  # ✅ This targets the specific NSG for the management subnet
+  network_security_group_name = azurerm_network_security_group.this["management"].name
+}
