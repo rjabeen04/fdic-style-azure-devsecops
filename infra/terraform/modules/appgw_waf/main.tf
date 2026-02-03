@@ -58,21 +58,21 @@ resource "azurerm_application_gateway" "this" {
     password = var.frontend_cert_password
   }
 
-  http_listener {
-    name                           = "https-listener"
+http_listener {
+    name                           = "http-listener"
     frontend_ip_configuration_name = "frontend-ip"
-    frontend_port_name             = "fe-https"
-    protocol                       = "Https"
-    ssl_certificate_name           = "frontend-cert"
+    frontend_port_name             = "fe-http"
+    protocol                       = "Http"
+    # DO NOT include ssl_certificate_name here!
   }
 
   request_routing_rule {
-    name                       = "rule-https"
+    name                       = "rule-http"
     priority                   = 10
     rule_type                  = "Basic"
-    http_listener_name         = "https-listener"
+    http_listener_name         = "http-listener"
     backend_address_pool_name  = "backend-pool"
-    backend_http_settings_name = "https-settings"
+    backend_http_settings_name = "http-settings"
   }
 
   waf_configuration {
