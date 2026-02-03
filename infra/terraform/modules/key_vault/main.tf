@@ -23,7 +23,7 @@ resource "azurerm_key_vault" "this" {
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
-  key_type     = "RSA-HSM"
+  key_type     = "RSA"
   key_size     = var.key_size
 
   # ✅ Fixes CKV_AZURE_40
