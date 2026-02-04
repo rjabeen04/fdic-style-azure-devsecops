@@ -17,7 +17,6 @@ resource "azurerm_key_vault" "this" {
     bypass         = "AzureServices"
    }
 
-
   tags = var.tags
 }
 
