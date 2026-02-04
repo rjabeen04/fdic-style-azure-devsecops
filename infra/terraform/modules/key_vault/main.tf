@@ -16,7 +16,15 @@ resource "azurerm_key_vault" "this" {
     default_action = "Allow"
     bypass         = "AzureServices"
    }
-
+   lifecycle {
+    ignore_changes = [
+      # This ensures that if you change it back to Deny later 
+      # via the Portal, Terraform won't break the build.
+      network_acls,
+      public_network_access_enabled
+    ]
+  }
+ 
   tags = var.tags
 }
 
