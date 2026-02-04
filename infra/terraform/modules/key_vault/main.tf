@@ -24,7 +24,7 @@ resource "azurerm_key_vault" "this" {
       public_network_access_enabled
     ]
   }
-
+ 
   tags = var.tags
 }
 
