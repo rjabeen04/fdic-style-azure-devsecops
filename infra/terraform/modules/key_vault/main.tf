@@ -23,7 +23,7 @@ resource "azurerm_key_vault" "this" {
       network_acls,
       public_network_access_enabled
     ]
-  }
+  } 
   
   tags = var.tags
 }
