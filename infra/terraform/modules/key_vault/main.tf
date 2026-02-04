@@ -1,10 +1,11 @@
 data "azurerm_client_config" "current" {}
 
-# Get the GitHub Runner's IP
+# 1. Get the GitHub Runner's IP
 data "http" "runner_ip" {
   url = "https://ifconfig.me/ip"
 }
 
+# 2. Key Vault with Dynamic Whitelisting
 resource "azurerm_key_vault" "this" {
   name                          = var.name
   location                      = var.location
@@ -27,7 +28,7 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
-# --- THE FORCED WAITER (v7 Final) ---
+# 3. --- THE FORCED WAITER (v7 Final) ---
 resource "time_sleep" "wait_for_v7_firewall" {
   # Ensures the firewall update COMPLETES before the timer starts
   depends_on = [azurerm_key_vault.this]
@@ -40,6 +41,7 @@ resource "time_sleep" "wait_for_v7_firewall" {
   create_duration = "120s" 
 }
 
+# 4. The Encryption Key
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
@@ -61,7 +63,7 @@ resource "azurerm_key_vault_key" "des" {
   }
 }
 
-# --- PRIVATE ENDPOINT ---
+# 5. --- PRIVATE ENDPOINT KV BLOCK ---
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
