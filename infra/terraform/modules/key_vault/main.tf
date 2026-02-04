@@ -1,11 +1,10 @@
 data "azurerm_client_config" "current" {}
 
-# 1. Get the GitHub Runner's IP
+# Get the runner's IP
 data "http" "runner_ip" {
   url = "https://ifconfig.me/ip"
 }
 
-# 2. Key Vault with Dynamic Whitelisting
 resource "azurerm_key_vault" "this" {
   name                          = var.name
   location                      = var.location
@@ -16,54 +15,52 @@ resource "azurerm_key_vault" "this" {
   purge_protection_enabled      = true
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
+  
+  # Force this to true to ensure the firewall actually looks at our IP rules
   public_network_access_enabled = true
 
   network_acls {
     default_action = "Deny"
     bypass         = "AzureServices"
-    # trimspace removes any hidden newlines that cause 403s
+    # trimspace is mandatory to avoid "Forbidden" errors due to hidden characters
     ip_rules       = [trimspace(data.http.runner_ip.response_body)]
   }
 
   tags = var.tags
 }
 
-# 3. --- THE FORCED WAITER (v7 Final) ---
-resource "time_sleep" "wait_for_v7_firewall" {
-  # Ensures the firewall update COMPLETES before the timer starts
+# --- THE FORCED WAITER (v9) ---
+resource "time_sleep" "wait_for_v9_firewall" {
+  # This makes the sleep wait until the Vault firewall change is fully CONFIRMED
   depends_on = [azurerm_key_vault.this]
   
   triggers = {
-    # Re-runs if the Runner's IP changes
     runner_ip = data.http.runner_ip.response_body
   }
   
-  create_duration = "120s" 
+  # Bumping to 150s because your environment is experiencing high latency
+  create_duration = "150s" 
 }
 
-# 4. The Encryption Key
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
 
-  # Strictly enforced: Vault -> Wait 2 Mins -> Create Key
-  depends_on = [time_sleep.wait_for_v7_firewall]
+  # This is the strictly enforced order: Vault -> Wait -> Key
+  depends_on = [time_sleep.wait_for_v9_firewall]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
-  key_opts = [
-    "decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey",
-  ]
+  key_opts = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
 
   lifecycle {
-    # Prevents Terraform from re-creating the key every run just because the time changed
     ignore_changes = [expiration_date]
   }
 }
 
-# 5. --- PRIVATE ENDPOINT KV BLOCK ---
+# --- PRIVATE ENDPOINT ---
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
