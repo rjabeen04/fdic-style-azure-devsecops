@@ -71,3 +71,28 @@ resource "azurerm_private_endpoint" "kv" {
 
   tags = var.tags
 }
+# 1. Add this "pause" resource
+resource "time_sleep" "wait_for_kv_network" {
+  depends_on = [azurerm_key_vault.this]
+  create_duration = "30s"
+}
+
+# 2. Update your Key resource to wait for the pause
+resource "azurerm_key_vault_key" "des" {
+  name         = "des-key"
+  key_vault_id = azurerm_key_vault.this.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  # THIS IS THE CRITICAL ADDITION
+  depends_on = [time_sleep.wait_for_kv_network] 
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+}
