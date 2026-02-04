@@ -12,30 +12,42 @@ resource "azurerm_key_vault" "this" {
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
   public_network_access_enabled = true
+
   network_acls {
     default_action = "Allow"
     bypass         = "AzureServices"
-   }
-   lifecycle {
+  }
+
+  lifecycle {
     ignore_changes = [
-      # This ensures that if you change it back to Deny later 
-      # via the Portal, Terraform won't break the build.
       network_acls,
       public_network_access_enabled
     ]
   }
- 
+  
   tags = var.tags
 }
 
+# --- THE WAITER ---
+# This forces Terraform to pause for 60 seconds after the Vault is created/updated
+# to allow Azure's physical firewalls to actually open up.
+resource "time_sleep" "wait_for_kv_network" {
+  depends_on      = [azurerm_key_vault.this]
+  create_duration = "60s"
+}
 
+# --- THE KEY (MERGED VERSION) ---
 resource "azurerm_key_vault_key" "des" {
   # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
   # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
+  
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
+
+  # This is the critical link to the timer
+  depends_on = [time_sleep.wait_for_kv_network]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
@@ -44,9 +56,12 @@ resource "azurerm_key_vault_key" "des" {
     "decrypt",
     "wrapKey",
     "unwrapKey",
+    "sign",
+    "verify"
   ]
 }
 
+# --- PRIVATE ENDPOINT ---
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
@@ -70,29 +85,4 @@ resource "azurerm_private_endpoint" "kv" {
   }
 
   tags = var.tags
-}
-# 1. Add this "pause" resource
-resource "time_sleep" "wait_for_kv_network" {
-  depends_on = [azurerm_key_vault.this]
-  create_duration = "30s"
-}
-
-# 2. Update your Key resource to wait for the pause
-resource "azurerm_key_vault_key" "des" {
-  name         = "des-key"
-  key_vault_id = azurerm_key_vault.this.id
-  key_type     = "RSA"
-  key_size     = 2048
-
-  # THIS IS THE CRITICAL ADDITION
-  depends_on = [time_sleep.wait_for_kv_network] 
-
-  key_opts = [
-    "decrypt",
-    "encrypt",
-    "sign",
-    "unwrapKey",
-    "verify",
-    "wrapKey",
-  ]
 }
