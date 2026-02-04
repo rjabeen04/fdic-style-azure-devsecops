@@ -1,6 +1,6 @@
 data "azurerm_client_config" "current" {}
 
-# Get the runner's IP
+# 1. Get the Runner IP
 data "http" "runner_ip" {
   url = "https://ifconfig.me/ip"
 }
@@ -16,40 +16,39 @@ resource "azurerm_key_vault" "this" {
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
   
-  # Force this to true to ensure the firewall actually looks at our IP rules
+  # CRITICAL: This must be true for the ip_rules to work
   public_network_access_enabled = true
 
   network_acls {
     default_action = "Deny"
     bypass         = "AzureServices"
-    # trimspace is mandatory to avoid "Forbidden" errors due to hidden characters
     ip_rules       = [trimspace(data.http.runner_ip.response_body)]
   }
 
   tags = var.tags
 }
 
-# --- THE FORCED WAITER (v9) ---
-resource "time_sleep" "wait_for_v9_firewall" {
-  # This makes the sleep wait until the Vault firewall change is fully CONFIRMED
+# 2. THE STAGE-GATE WAITER (v10)
+resource "time_sleep" "wait_for_v10_firewall" {
   depends_on = [azurerm_key_vault.this]
   
   triggers = {
     runner_ip = data.http.runner_ip.response_body
   }
   
-  # Bumping to 150s because your environment is experiencing high latency
   create_duration = "150s" 
 }
 
+# 3. THE KEY 
 resource "azurerm_key_vault_key" "des" {
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
 
-  # This is the strictly enforced order: Vault -> Wait -> Key
-  depends_on = [time_sleep.wait_for_v9_firewall]
+  # This is the most important part: 
+  # It prevents Terraform from touching the key until the vault is unlocked
+  depends_on = [time_sleep.wait_for_v10_firewall]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
@@ -60,7 +59,7 @@ resource "azurerm_key_vault_key" "des" {
   }
 }
 
-# --- PRIVATE ENDPOINT ---
+# 4. PRIVATE ENDPOINT
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
