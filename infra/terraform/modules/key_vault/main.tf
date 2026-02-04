@@ -20,24 +20,24 @@ resource "azurerm_key_vault" "this" {
   network_acls {
     default_action = "Deny"
     bypass         = "AzureServices"
-    # trimspace is vital here to remove invisible characters
+    # trimspace removes any hidden newlines that cause 403s
     ip_rules       = [trimspace(data.http.runner_ip.response_body)]
   }
 
   tags = var.tags
 }
 
-# --- THE FORCED WAITER (v6) ---
-resource "time_sleep" "wait_for_v6_firewall" {
-  # This makes the sleep wait for the Vault update to FINISH first
+# --- THE FORCED WAITER (v7 Final) ---
+resource "time_sleep" "wait_for_v7_firewall" {
+  # Ensures the firewall update COMPLETES before the timer starts
   depends_on = [azurerm_key_vault.this]
   
   triggers = {
-    # This forces a NEW sleep whenever the IP is fetched
+    # Re-runs if the Runner's IP changes
     runner_ip = data.http.runner_ip.response_body
   }
   
-  create_duration = "120s" # Bumping to 2 minutes for absolute certainty
+  create_duration = "120s" 
 }
 
 resource "azurerm_key_vault_key" "des" {
@@ -46,14 +46,19 @@ resource "azurerm_key_vault_key" "des" {
   key_type     = "RSA"
   key_size     = 2048
 
-  # This is the strictly enforced order
-  depends_on = [time_sleep.wait_for_v6_firewall]
+  # Strictly enforced: Vault -> Wait 2 Mins -> Create Key
+  depends_on = [time_sleep.wait_for_v7_firewall]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
   key_opts = [
     "decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey",
   ]
+
+  lifecycle {
+    # Prevents Terraform from re-creating the key every run just because the time changed
+    ignore_changes = [expiration_date]
+  }
 }
 
 # --- PRIVATE ENDPOINT ---
