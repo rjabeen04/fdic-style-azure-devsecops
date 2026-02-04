@@ -29,11 +29,15 @@ resource "azurerm_key_vault" "this" {
 }
 
 # --- THE WAITER ---
-# This forces Terraform to pause for 60 seconds after the Vault is created/updated
+# This forces Terraform to pause for 90 seconds after the Vault is created/updated
 # to allow Azure's physical firewalls to actually open up.
 resource "time_sleep" "wait_for_kv_network" {
-  depends_on      = [azurerm_key_vault.this]
-  create_duration = "60s"
+  triggers = {
+    # This forces a 90-second wait on EVERY run, 
+    # giving Azure's firewall time to catch up.
+    always_run = timestamp()
+  }
+  create_duration = "90s"
 }
 
 # --- THE KEY (MERGED VERSION) ---
