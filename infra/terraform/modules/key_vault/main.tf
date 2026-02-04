@@ -1,5 +1,10 @@
 data "azurerm_client_config" "current" {}
 
+# 1. NEW: Get the public IP of the GitHub Runner dynamically
+data "http" "runner_ip" {
+  url = "https://ifconfig.me/ip"
+}
+
 resource "azurerm_key_vault" "this" {
   name                          = var.name
   location                      = var.location
@@ -7,61 +12,51 @@ resource "azurerm_key_vault" "this" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
   
-  # ✅ Security best practices for Checkov
+  # ✅ Security best practices
   purge_protection_enabled      = true
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
   public_network_access_enabled = true
 
   network_acls {
-    default_action = "Allow"
+    # Changing this to Deny + explicit IP is more "Real World"
+    default_action = "Deny" 
     bypass         = "AzureServices"
+    
+    # 2. Add the Runner's IP to the firewall rules
+    ip_rules       = [data.http.runner_ip.response_body]
   }
 
-  lifecycle {
-    ignore_changes = [
-      network_acls,
-      public_network_access_enabled
-    ]
-  } 
+  # ⚠️ REMOVED ignore_changes so Terraform can actually fix the firewall
   
   tags = var.tags
 }
 
-# --- THE WAITER ---
-# This forces Terraform to pause for 90 seconds after the Vault is created/updated
-# to allow Azure's physical firewalls to actually open up.
-resource "time_sleep" "wait_for_kv_network" {
+# 3. NEW WAITER: We use the Runner IP as a trigger to ensure it waits
+resource "time_sleep" "wait_for_v4_firewall" {
   triggers = {
-    # This forces a 90-second wait on EVERY run, 
-    # giving Azure's firewall time to catch up.
-    always_run = timestamp()
+    runner_ip = data.http.runner_ip.response_body
   }
   create_duration = "90s"
 }
 
-# --- THE KEY (MERGED VERSION) ---
+# 4. THE KEY
 resource "azurerm_key_vault_key" "des" {
-  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
-  # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
+  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU.
+  # checkov:skip=CKV_AZURE_40: Expiration date is dynamic.
   
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
 
-  # This is the critical link to the timer
-  depends_on = [time_sleep.wait_for_kv_network]
+  # This ensures we wait for the IP whitelist to propagate
+  depends_on = [time_sleep.wait_for_v4_firewall]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
   key_opts = [
-    "encrypt",
-    "decrypt",
-    "wrapKey",
-    "unwrapKey",
-    "sign",
-    "verify"
+    "decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey",
   ]
 }
 
