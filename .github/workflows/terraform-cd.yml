@@ -55,7 +55,7 @@ jobs:
             az keyvault update \
               --name fdic-dev-kv \
               --public-network-access Enabled \
-              --default-action Deny
+              --default-action Allow
             
             echo "Waiting 60s for Azure network propagation..."
             sleep 60
