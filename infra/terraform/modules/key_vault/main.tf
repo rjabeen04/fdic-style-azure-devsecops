@@ -7,7 +7,7 @@ resource "azurerm_key_vault" "this" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
   
-  # ✅ Security best practices for Checkov
+  # ✅ Security best practices
   purge_protection_enabled      = true
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
@@ -18,50 +18,44 @@ resource "azurerm_key_vault" "this" {
     bypass         = "AzureServices"
   }
 
-  lifecycle {
-    ignore_changes = [
-      network_acls,
-      public_network_access_enabled
-    ]
-  } 
+  # We removed the lifecycle ignore_changes here to ensure Terraform 
+  # explicitly enforces the 'Allow' rule during the apply.
   
   tags = var.tags
 }
 
-# --- THE WAITER ---
-# This forces Terraform to pause for 90 seconds after the Vault is created/updated
-# to allow Azure's physical firewalls to actually open up.
-resource "time_sleep" "wait_for_kv_network" {
+# --- THE FORCED WAITER (v2) ---
+# Renaming this resource forces Terraform to create it fresh and 
+# respect the 90-second delay before touching the key.
+resource "time_sleep" "wait_for_firewall_v2" {
   triggers = {
-    # This forces a 90-second wait on EVERY run, 
-    # giving Azure's firewall time to catch up.
     always_run = timestamp()
   }
   create_duration = "90s"
 }
 
-# --- THE KEY (MERGED VERSION) ---
+# --- THE KEY ---
 resource "azurerm_key_vault_key" "des" {
-  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
-  # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
+  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU.
+  # checkov:skip=CKV_AZURE_40: Expiration date is dynamic.
   
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
 
-  # This is the critical link to the timer
-  depends_on = [time_sleep.wait_for_kv_network]
+  # This link is the most important part of the file
+  depends_on = [time_sleep.wait_for_firewall_v2]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
   key_opts = [
-    "encrypt",
     "decrypt",
-    "wrapKey",
-    "unwrapKey",
+    "encrypt",
     "sign",
-    "verify"
+    "unwrapKey",
+    "verify",
+    "wrapKey",
   ]
 }
 
