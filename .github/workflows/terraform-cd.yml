@@ -37,6 +37,29 @@ jobs:
           terraform_version: "1.7.5"
           terraform_wrapper: false
 
+      - name: Whitelist Runner IP
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            # Get GitHub Runner IP
+            RUNNER_IP=$(curl -s https://api.ipify.org)
+            echo "Whitelisting Runner IP: $RUNNER_IP"
+            
+            # Update Key Vault Firewall
+            az keyvault network-rule add \
+              --name fdic-dev-kv \
+              --resource-group fdic-dev-rg \
+              --ip-address $RUNNER_IP
+            
+            # Ensure access is enabled for the update
+            az keyvault update \
+              --name fdic-dev-kv \
+              --public-network-access Enabled \
+              --default-action Deny
+            
+            echo "Waiting 60s for Azure network propagation..."
+            sleep 60
+
       - name: Terraform Apply
         working-directory: infra/terraform/environments/dev
         env:
