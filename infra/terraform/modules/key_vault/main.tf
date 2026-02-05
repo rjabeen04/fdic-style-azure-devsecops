@@ -1,5 +1,10 @@
 data "azurerm_client_config" "current" {}
 
+# 1. Get the Runner IP
+data "http" "runner_ip" {
+  url = "https://ifconfig.me/ip"
+}
+
 resource "azurerm_key_vault" "this" {
   name                          = var.name
   location                      = var.location
@@ -7,65 +12,54 @@ resource "azurerm_key_vault" "this" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
   
-  # ✅ Security best practices for Checkov
   purge_protection_enabled      = true
   soft_delete_retention_days    = 7
   enable_rbac_authorization     = true
+  
+  # CRITICAL: This must be true for the ip_rules to work
   public_network_access_enabled = true
 
   network_acls {
-    default_action = "Allow"
+    default_action = "Deny"
     bypass         = "AzureServices"
+    ip_rules       = [trimspace(data.http.runner_ip.response_body)]
   }
 
-  lifecycle {
-    ignore_changes = [
-      network_acls,
-      public_network_access_enabled
-    ]
-  } 
-  
   tags = var.tags
 }
 
-# --- THE WAITER ---
-# This forces Terraform to pause for 90 seconds after the Vault is created/updated
-# to allow Azure's physical firewalls to actually open up.
-resource "time_sleep" "wait_for_kv_network" {
+# 2. THE STAGE-GATE WAITER (v10)
+resource "time_sleep" "wait_for_v10_firewall" {
+  depends_on = [azurerm_key_vault.this]
+  
   triggers = {
-    # This forces a 90-second wait on EVERY run, 
-    # giving Azure's firewall time to catch up.
-    always_run = timestamp()
+    runner_ip = data.http.runner_ip.response_body
   }
-  create_duration = "90s"
+  
+  create_duration = "150s" 
 }
 
-# --- THE KEY (MERGED VERSION) ---
+# 3. THE KEY 
 resource "azurerm_key_vault_key" "des" {
-  # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
-  # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
-  
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"
   key_size     = 2048
 
-  # This is the critical link to the timer
-  depends_on = [time_sleep.wait_for_kv_network]
+  # This is the most important part: 
+  # It prevents Terraform from touching the key until the vault is unlocked
+  depends_on = [time_sleep.wait_for_v10_firewall]
 
   expiration_date = timeadd(timestamp(), "${var.key_expire_days * 24}h")
 
-  key_opts = [
-    "encrypt",
-    "decrypt",
-    "wrapKey",
-    "unwrapKey",
-    "sign",
-    "verify"
-  ]
+  key_opts = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+
+  lifecycle {
+    ignore_changes = [expiration_date]
+  }
 }
 
-# --- PRIVATE ENDPOINT ---
+# 4. PRIVATE ENDPOINT
 resource "azurerm_private_endpoint" "kv" {
   count               = var.private_endpoint_enabled ? 1 : 0
   name                = "${var.name}-pe"
