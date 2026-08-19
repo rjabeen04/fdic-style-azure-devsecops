@@ -19,6 +19,11 @@ resource "azurerm_kubernetes_cluster" "this" {
   private_dns_zone_id     = "System"
   local_account_disabled  = true
 
+  azure_active_directory_role_based_access_control {
+    managed                = true
+    admin_group_object_ids = ["ca12b51c-4aa9-4420-9c48-5437d5386b0c"]
+  }
+
   # ✅ Secrets Store CSI Driver rotation
   key_vault_secrets_provider {
     secret_rotation_enabled  = true
