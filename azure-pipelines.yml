@@ -107,7 +107,7 @@ stages:
 
           cd infra/terraform/environments/dev
 
-          terraform init
+          terraform init -reconfigure
 
           terraform plan -out=tfplan
 
