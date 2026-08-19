@@ -13,5 +13,5 @@ variable "ssl_cert_password" {
   type        = string
   description = "Password for the App Gateway SSL certificate"
   sensitive   = true
-  default     = "P@ssw0rd1234!" 
+  default     = "P@ssw0rd1234!"
 }

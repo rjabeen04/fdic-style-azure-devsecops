@@ -4,11 +4,11 @@ variable "name" {
 }
 
 variable "location" {
-  type        = string
+  type = string
 }
 
 variable "resource_group_name" {
-  type        = string
+  type = string
 }
 
 variable "subnet_id" {
@@ -17,13 +17,13 @@ variable "subnet_id" {
 }
 
 variable "sku_name" {
-  type        = string
-  default     = "WAF_v2"
+  type    = string
+  default = "WAF_v2"
 }
 
 variable "sku_tier" {
-  type        = string
-  default     = "WAF_v2"
+  type    = string
+  default = "WAF_v2"
 }
 
 variable "ssl_cert_password" {
@@ -35,18 +35,18 @@ variable "ssl_cert_password" {
 # --- MISSING VARIABLES ADDED BELOW ---
 
 variable "backend_fqdn" {
-  type        = string
-  default     = "musical-volunteer.local"
+  type    = string
+  default = "musical-volunteer.local"
 }
 
 variable "backend_root_cert_data" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "frontend_cert_pfx_base64" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "frontend_cert_password" {
@@ -56,6 +56,6 @@ variable "frontend_cert_password" {
 }
 
 variable "tags" {
-  type        = map(string)
-  default     = {}
+  type    = map(string)
+  default = {}
 }
