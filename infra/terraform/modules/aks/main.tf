@@ -51,7 +51,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     only_critical_addons_enabled = true
 
     # ✅ Encryption + ephemeral OS disks (policy-driven)
-    enable_host_encryption = true
+    enable_host_encryption = false
     os_disk_type           = "Managed"
   }
 
@@ -77,7 +77,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   mode                  = "User"
 
   # ✅ Encryption + ephemeral OS disks (policy-driven)
-  enable_host_encryption = true
+  enable_host_encryption = false
   os_disk_type           = "Managed"
 
   tags = var.tags
