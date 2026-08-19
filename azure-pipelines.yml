@@ -104,6 +104,7 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         addSpnToEnvironment: true
+
         inlineScript: |
           echo "Azure authentication successful"
 
@@ -114,20 +115,16 @@ stages:
           export ARM_CLIENT_ID="$servicePrincipalId"
           export ARM_TENANT_ID="$tenantId"
           export ARM_SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
-
-          export ARM_OIDC_REQUEST_TOKEN="$SYSTEM_ACCESSTOKEN"
-          export ARM_OIDC_REQUEST_URL="$SYSTEM_OIDCREQUESTURI"
-          export ARM_ADO_PIPELINE_SERVICE_CONNECTION_ID="$AZURESUBSCRIPTION_SERVICE_CONNECTION_ID"
-
+          export ARM_OIDC_TOKEN="$idToken"
 
           cd infra/terraform/environments/dev
 
           terraform init -reconfigure
 
           terraform plan -out=tfplan
+
       env:
-      SYSTEM_ACCESSTOKEN: $(System.SYSTEM_ACCESSTOKEN)
-      SYSTEM_OIDCREQUESTURI: $(System.SYSTEM_OIDCREQUESTURI)
-      AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: $(azureServiceConnection)
-      
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+        AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: $(azureServiceConnection)
 
