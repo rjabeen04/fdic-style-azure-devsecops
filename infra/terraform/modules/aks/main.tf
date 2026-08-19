@@ -52,7 +52,7 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     # ✅ Encryption + ephemeral OS disks (policy-driven)
     enable_host_encryption = true
-    os_disk_type           = "Ephemeral"
+    os_disk_type           = "Managed"
   }
 
   # ✅ Log Analytics
