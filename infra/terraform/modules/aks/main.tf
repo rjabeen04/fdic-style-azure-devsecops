@@ -78,7 +78,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
 
   # ✅ Encryption + ephemeral OS disks (policy-driven)
   enable_host_encryption = true
-  os_disk_type           = "Ephemeral"
+  os_disk_type           = "Managed"
 
   tags = var.tags
 }
