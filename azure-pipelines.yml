@@ -30,10 +30,14 @@ stages:
     - checkout: self
 
     # Install Terraform
-    - task: TerraformInstaller@1
+    # Install Terraform
+    - script: |
+       wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+       unzip -o terraform_$(terraformVersion)_linux_amd64.zip
+       sudo mv terraform /usr/local/bin/
+       terraform version
       displayName: 'Install Terraform'
-      inputs:
-        terraformVersion: '$(terraformVersion)'
+
 
     # Terraform Format Check
     - script: |
