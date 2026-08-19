@@ -32,7 +32,9 @@ stages:
 
     - checkout: self
 
+    # --------------------------------------------------------
     # Install Terraform
+    # --------------------------------------------------------
     - script: |
         wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
         unzip -o terraform_$(terraformVersion)_linux_amd64.zip
@@ -40,30 +42,41 @@ stages:
         terraform version
       displayName: 'Install Terraform'
 
+    # --------------------------------------------------------
     # Terraform Format Check
+    # --------------------------------------------------------
     - script: |
         terraform fmt -check -recursive
       displayName: 'Terraform Format Check'
 
+    # --------------------------------------------------------
     # Terraform Init
+    # Backend disabled for validation
+    # --------------------------------------------------------
     - script: |
         cd infra/terraform/environments/dev
         terraform init -backend=false
       displayName: 'Terraform Init'
 
+    # --------------------------------------------------------
     # Terraform Validate
+    # --------------------------------------------------------
     - script: |
         cd infra/terraform/environments/dev
         terraform validate
       displayName: 'Terraform Validate'
 
+    # --------------------------------------------------------
     # Checkov Security Scan
+    # --------------------------------------------------------
     - script: |
         pip install checkov
         checkov -d infra/terraform --framework terraform
       displayName: 'Checkov IaC Security Scan'
 
+    # --------------------------------------------------------
     # Gitleaks Secret Scan
+    # --------------------------------------------------------
     - script: |
         docker run --rm \
           -v "$(Build.SourcesDirectory):/repo" \
@@ -77,7 +90,9 @@ stages:
 # ============================================================
 - stage: Plan
   displayName: 'Terraform Plan'
+
   dependsOn: Validate
+
   condition: succeeded()
 
   jobs:
@@ -88,7 +103,9 @@ stages:
 
     - checkout: self
 
+    # --------------------------------------------------------
     # Install Terraform
+    # --------------------------------------------------------
     - script: |
         wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
         unzip -o terraform_$(terraformVersion)_linux_amd64.zip
@@ -96,9 +113,12 @@ stages:
         terraform version
       displayName: 'Install Terraform'
 
-    # Azure authentication through Workload Identity Federation
+    # --------------------------------------------------------
+    # Azure Authentication - Workload Identity Federation
+    # --------------------------------------------------------
     - task: AzureCLI@2
       displayName: 'Azure Login - Workload Identity Federation'
+
       inputs:
         azureSubscription: '$(azureServiceConnection)'
         scriptType: 'bash'
@@ -106,25 +126,113 @@ stages:
         addSpnToEnvironment: true
 
         inlineScript: |
+
           echo "Azure authentication successful"
 
           az account show
 
+          # --------------------------------------------------
           # Configure Terraform for Workload Identity Federation
+          # --------------------------------------------------
           export ARM_USE_OIDC=true
           export ARM_CLIENT_ID="$servicePrincipalId"
           export ARM_TENANT_ID="$tenantId"
           export ARM_SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
           export ARM_OIDC_TOKEN="$idToken"
 
+          # --------------------------------------------------
+          # Terraform
+          # --------------------------------------------------
           cd infra/terraform/environments/dev
 
           terraform init -reconfigure
 
           terraform plan -out=tfplan
 
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-        AZURESUBSCRIPTION_SERVICE_CONNECTION_ID: $(azureServiceConnection)
+    # --------------------------------------------------------
+    # Publish Terraform Plan
+    # --------------------------------------------------------
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Terraform Plan'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/infra/terraform/environments/dev/tfplan'
+        artifact: 'terraform-plan'
+        publishLocation: 'pipeline'
+
+
+# ============================================================
+# STAGE 3 — Terraform Apply
+# ============================================================
+- stage: Apply
+  displayName: 'Terraform Apply'
+
+  dependsOn: Plan
+
+  condition: succeeded()
+
+  jobs:
+  - job: TerraformApply
+    displayName: 'Terraform Apply'
+
+    steps:
+
+    - checkout: self
+
+    # --------------------------------------------------------
+    # Install Terraform
+    # --------------------------------------------------------
+    - script: |
+        wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+        unzip -o terraform_$(terraformVersion)_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        terraform version
+      displayName: 'Install Terraform'
+
+    # --------------------------------------------------------
+    # Download Exact Terraform Plan
+    # --------------------------------------------------------
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Terraform Plan'
+      inputs:
+        artifact: 'terraform-plan'
+        path: '$(Pipeline.Workspace)/terraform-plan'
+
+    # --------------------------------------------------------
+    # Azure Authentication - Workload Identity Federation
+    # --------------------------------------------------------
+    - task: AzureCLI@2
+      displayName: 'Azure Login - Workload Identity Federation'
+
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        addSpnToEnvironment: true
+
+        inlineScript: |
+
+          echo "Azure authentication successful"
+
+          az account show
+
+          # --------------------------------------------------
+          # Configure Terraform for Workload Identity Federation
+          # --------------------------------------------------
+          export ARM_USE_OIDC=true
+          export ARM_CLIENT_ID="$servicePrincipalId"
+          export ARM_TENANT_ID="$tenantId"
+          export ARM_SUBSCRIPTION_ID="$(az account show --query id -o tsv)"
+          export ARM_OIDC_TOKEN="$idToken"
+
+          # --------------------------------------------------
+          # Terraform
+          # --------------------------------------------------
+          cd infra/terraform/environments/dev
+
+          terraform init -reconfigure
+
+          # --------------------------------------------------
+          # Apply the EXACT plan generated in Stage 2
+          # --------------------------------------------------
+          terraform apply "$(Pipeline.Workspace)/terraform-plan/tfplan"
 
