@@ -23,6 +23,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     managed                = true
     admin_group_object_ids = ["ca12b51c-4aa9-4420-9c48-5437d5386b0c"]
   }
+  oidc_issuer_enabled = true
 
   # ✅ Secrets Store CSI Driver rotation
   key_vault_secrets_provider {
