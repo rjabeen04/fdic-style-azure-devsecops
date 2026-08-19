@@ -61,4 +61,10 @@ stages:
         pip install checkov
         checkov -d infra/terraform --framework terraform
       displayName: 'Checkov IaC Security Scan'
+      
+    # Gitleaks Secret Scan
+    - script: |
+        curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b /usr/local/bin
+        gitleaks detect --source . --verbose --redact
+      displayName: 'Gitleaks Secret Scan'
 
