@@ -30,9 +30,9 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   # ✅ Restrict API server access (required by your Checkov policy)
-  api_server_access_profile {
-    authorized_ip_ranges = var.api_server_authorized_ip_ranges
-  }
+  #  api_server_access_profile {
+  #  authorized_ip_ranges = var.api_server_authorized_ip_ranges
+  # }
 
   # ✅ Network policy
   network_profile {
