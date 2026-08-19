@@ -119,9 +119,9 @@ module "aks" {
   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
 
   node_count      = 2
-  vm_size         = "Standard_DS2_v2"
+  vm_size         = "Standard_DS2_v3"
   user_node_count = 2
-  user_vm_size    = "Standard_DS2_v2"
+  user_vm_size    = "Standard_DS2_v3"
 
   tags = local.tags
 }
