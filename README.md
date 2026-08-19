@@ -85,3 +85,32 @@ In high-security environments, Azure Key Vault uses a firewall to restrict acces
 1. **Dynamic Whitelisting:** Implemented `data "http"` to fetch the GitHub Runner's IP dynamically.
 2. **Synchronization Gates:** Introduced a `time_sleep` resource to create a 150-second buffer.
 3. **Conclusion:** This error highlights the gap between "API Success" and "Resource Readiness." In a production enterprise setting, the next architectural step would be utilizing **Self-Hosted GitHub Runners** inside the VNet to bypass public internet propagation entirely.
+# FDIC-Style Azure DevSecOps
+
+## Overview
+
+This project demonstrates a secure Infrastructure as Code (IaC) and DevSecOps workflow using Terraform and Azure DevOps.
+
+The project integrates GitHub source control with Azure DevOps Pipelines to automatically validate Terraform code and perform Infrastructure as Code security scanning before infrastructure changes are approved.
+
+## Architecture
+
+```text
+Developer
+    |
+    v
+GitHub Repository
+    |
+    v
+Azure DevOps Pipeline
+    |
+    +--> Terraform Format Check
+    |
+    +--> Terraform Init
+    |
+    +--> Terraform Validate
+    |
+    +--> Checkov Security Scan
+    |
+    v
+Validation / Security Results
