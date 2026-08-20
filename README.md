@@ -24,7 +24,7 @@ The platform provisions and manages the following Azure components:
 - **Application Gateway with Web Application Firewall (WAF)**
 - **Azure Key Vault** for secrets management
 - **Log Analytics** for centralized logging and monitoring
-- **GitHub Actions** for CI/CD and security automation
+- **Azure DevOps Pipelines** for CI/CD and security automation
 
 Application workloads are deployed to AKS using **Helm**, while infrastructure is provisioned using **Terraform**.
 
@@ -69,7 +69,7 @@ Security gates (SAST, dependency scanning, IaC scanning) are enforced before cha
 Execution details will be added as Terraform modules and pipelines are implemented.
 
 Typical usage includes:
-- Terraform plan/apply via GitHub Actions.
+- Terraform plan/apply via Azure DevOps Pipelines.
 - Helm deployments to AKS.
 - Manual approvals for protected environments.
 
@@ -82,9 +82,9 @@ Typical usage includes:
 In high-security environments, Azure Key Vault uses a firewall to restrict access. While Terraform successfully updates the firewall rules (Management Plane), the physical distribution of those rules across Azure's global infrastructure (Data Plane) experiences a "propagation lag." 
 
 ### Engineering Response
-1. **Dynamic Whitelisting:** Implemented `data "http"` to fetch the GitHub Runner's IP dynamically.
+1. **Dynamic Whitelisting:** Implemented `data "http"` to fetch the Azure Devops build  agent's public IP dynamically.
 2. **Synchronization Gates:** Introduced a `time_sleep` resource to create a 150-second buffer.
-3. **Conclusion:** This error highlights the gap between "API Success" and "Resource Readiness." In a production enterprise setting, the next architectural step would be utilizing **Self-Hosted GitHub Runners** inside the VNet to bypass public internet propagation entirely.
+3. **Conclusion:** This error highlights the gap between "API Success" and "Resource Readiness." In a production enterprise setting, the next architectural step would be utilizing **Self-Hosted Azure Devops Agents** inside the VNet to bypass public internet propagation entirely.
 # FDIC-Style Azure DevSecOps
 
 ## Overview
