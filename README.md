@@ -31,86 +31,79 @@ Application workloads are deployed to AKS using **Helm**, while infrastructure i
 Detailed diagrams are maintained in `docs/diagrams/`.
 
 ---
-
 ## Pipeline Overview
-This repository focuses on **platform and infrastructure pipelines**.
 
-Planned pipeline stages include:
-- Pull request validation with security scanning
-- Terraform plan on pull requests
-- Manual approval gates for protected environments
-- Terraform apply for environment provisioning
-- Helm-based application deployment
-- Optional destroy workflows for POC teardown
+This repository uses **Azure DevOps** as the CI/CD orchestration layer with GitHub as the source repository.
 
-Security gates (SAST, dependency scanning, IaC scanning) are enforced before changes reach protected branches.
+The infrastructure pipeline performs:
 
----
+1. Terraform format validation
+2. Terraform initialization
+3. Terraform validation
+4. Checkov infrastructure security scanning
+5. Gitleaks secret scanning
+6. Terraform plan
+7. Terraform plan artifact publication
+8. Terraform apply
 
-## Phases / Roadmap
-**Phase 0 – Repository Governance & Structure**
-- Repository scaffolding, Documentation, and Security baselines (CodeQL, Dependabot).
-
-**Phase 1 – Infrastructure Provisioning**
-- AKS, networking, WAF, and supporting services.
-- Terraform modules and environments.
-
-**Phase 2 – Application Deployment**
-- Helm charts for application workloads.
-- Ingress and WAF integration.
-
-**Phase 3 – Security & Observability**
-- Infrastructure security scanning.
-- Runtime monitoring and logging.
+Azure authentication uses **Microsoft Entra ID Workload Identity Federation**, avoiding long-lived Azure service principal credentials in the pipeline.
 
 ---
 
-## How to Run (Placeholder)
-Execution details will be added as Terraform modules and pipelines are implemented.
+## Security & Platform Engineering
 
-Typical usage includes:
-- Terraform plan/apply via Azure DevOps Pipelines.
-- Helm deployments to AKS.
-- Manual approvals for protected environments.
+The platform incorporates enterprise-oriented security controls including:
+
+- Private Azure Kubernetes Service (AKS)
+- Microsoft Entra ID integration
+- AKS OIDC issuer
+- Azure Container Registry (ACR)
+- Azure Key Vault
+- Customer-managed encryption
+- Network segmentation
+- Application Gateway with Web Application Firewall (WAF)
+- Centralized Log Analytics monitoring
+- Checkov IaC security scanning
+- Gitleaks secret detection
+- Workload Identity Federation for Azure DevOps
+
+The infrastructure is implemented using reusable Terraform modules and environment-specific configurations.
 
 ---
 
-## 🔍 Post-Mortem: Handling Cloud "Eventual Consistency"
-**Current Status:** Deployment pipeline intermittently encounters a `403 Forbidden` at the `azurerm_key_vault_key` stage.
+## Deployment Model
 
-### The Technical Challenge
-In high-security environments, Azure Key Vault uses a firewall to restrict access. While Terraform successfully updates the firewall rules (Management Plane), the physical distribution of those rules across Azure's global infrastructure (Data Plane) experiences a "propagation lag." 
-
-### Engineering Response
-1. **Dynamic Whitelisting:** Implemented `data "http"` to fetch the Azure Devops build  agent's public IP dynamically.
-2. **Synchronization Gates:** Introduced a `time_sleep` resource to create a 150-second buffer.
-3. **Conclusion:** This error highlights the gap between "API Success" and "Resource Readiness." In a production enterprise setting, the next architectural step would be utilizing **Self-Hosted Azure Devops Agents** inside the VNet to bypass public internet propagation entirely.
-# FDIC-Style Azure DevSecOps
-
-## Overview
-
-This project demonstrates a secure Infrastructure as Code (IaC) and DevSecOps workflow using Terraform and Azure DevOps.
-
-The project integrates GitHub source control with Azure DevOps Pipelines to automatically validate Terraform code and perform Infrastructure as Code security scanning before infrastructure changes are approved.
-
-## Architecture
+Infrastructure changes are delivered through Azure DevOps using a controlled Terraform workflow:
 
 ```text
-Developer
-    |
-    v
-GitHub Repository
-    |
-    v
+GitHub
+   |
+   v
 Azure DevOps Pipeline
-    |
-    +--> Terraform Format Check
-    |
-    +--> Terraform Init
-    |
-    +--> Terraform Validate
-    |
-    +--> Checkov Security Scan
-    |
-    v
-Validation / Security Results
+   |
+   +--> Terraform Format
+   |
+   +--> Terraform Init
+   |
+   +--> Terraform Validate
+   |
+   +--> Checkov
+   |
+   +--> Gitleaks
+   |
+   +--> Terraform Plan
+   |
+   +--> Plan Artifact
+   |
+   +--> Terraform Apply
+   |
+   v
+Azure Platform
+   |
+   +--> VNet / Networking
+   +--> ACR
+   +--> Key Vault
+   +--> AKS
+   +--> Application Gateway / WAF
+   +--> Log Analytics
+
