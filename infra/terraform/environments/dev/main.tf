@@ -75,9 +75,9 @@ module "key_vault" {
   name                = "${local.prefix}-kv"
   location            = var.location
   resource_group_name = module.rg.name
-  
+
   private_endpoint_subnet_id = module.network.subnet_ids["private_endpoints"]
-  tags = local.tags
+  tags                       = local.tags
 }
 
 # 5) ACR
@@ -119,9 +119,9 @@ module "aks" {
   api_server_authorized_ip_ranges = var.api_server_authorized_ip_ranges
 
   node_count      = 2
-  vm_size         = "Standard_DS2_v2"
+  vm_size         = "Standard_D2as_v7"
   user_node_count = 2
-  user_vm_size    = "Standard_DS2_v2"
+  user_vm_size    = "Standard_D2as_v7"
 
   tags = local.tags
 }
@@ -132,11 +132,11 @@ module "aks" {
 # name                = "${local.prefix}-appgw"
 # location            = var.location
 # resource_group_name = module.rg.name
-  
+
 # subnet_id           = module.network.subnet_ids["management"]
 # backend_fqdn        = "myapp.internal"
-  
- # tags = local.tags
+
+# tags = local.tags
 #}
 
 

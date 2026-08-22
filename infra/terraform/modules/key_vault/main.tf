@@ -1,12 +1,12 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "this" {
-  name                          = var.name
-  location                      = var.location
-  resource_group_name           = var.resource_group_name
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  sku_name                      = "standard"
-  
+  name                = var.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+
   # ✅ Security best practices for Checkov
   purge_protection_enabled      = true
   soft_delete_retention_days    = 7
@@ -23,8 +23,8 @@ resource "azurerm_key_vault" "this" {
       network_acls,
       public_network_access_enabled
     ]
-  } 
-  
+  }
+
   tags = var.tags
 }
 
@@ -44,7 +44,7 @@ resource "time_sleep" "wait_for_kv_network" {
 resource "azurerm_key_vault_key" "des" {
   # checkov:skip=CKV_AZURE_112: HSM is not available in Standard SKU. Using software-backed RSA for cost control.
   # checkov:skip=CKV_AZURE_40: Expiration date is dynamically calculated via timeadd.
-  
+
   name         = var.key_name
   key_vault_id = azurerm_key_vault.this.id
   key_type     = "RSA"

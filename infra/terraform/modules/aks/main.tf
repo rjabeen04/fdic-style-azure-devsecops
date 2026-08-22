@@ -19,6 +19,12 @@ resource "azurerm_kubernetes_cluster" "this" {
   private_dns_zone_id     = "System"
   local_account_disabled  = true
 
+  azure_active_directory_role_based_access_control {
+    managed                = true
+    admin_group_object_ids = ["ca12b51c-4aa9-4420-9c48-5437d5386b0c"]
+  }
+  oidc_issuer_enabled = true
+
   # ✅ Secrets Store CSI Driver rotation
   key_vault_secrets_provider {
     secret_rotation_enabled  = true
@@ -30,9 +36,9 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   # ✅ Restrict API server access (required by your Checkov policy)
-  api_server_access_profile {
-    authorized_ip_ranges = var.api_server_authorized_ip_ranges
-  }
+  #  api_server_access_profile {
+  #  authorized_ip_ranges = var.api_server_authorized_ip_ranges
+  # }
 
   # ✅ Network policy
   network_profile {
@@ -51,8 +57,8 @@ resource "azurerm_kubernetes_cluster" "this" {
     only_critical_addons_enabled = true
 
     # ✅ Encryption + ephemeral OS disks (policy-driven)
-    enable_host_encryption = true
-    os_disk_type           = "Ephemeral"
+    enable_host_encryption = false
+    os_disk_type           = "Managed"
   }
 
   # ✅ Log Analytics
@@ -77,8 +83,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   mode                  = "User"
 
   # ✅ Encryption + ephemeral OS disks (policy-driven)
-  enable_host_encryption = true
-  os_disk_type           = "Ephemeral"
+  enable_host_encryption = false
+  os_disk_type           = "Managed"
 
   tags = var.tags
 }
