@@ -1,4 +1,4 @@
-🚀 **Application Workload:** This platform is designed to host the [Musical Volunteer Flask Application](https://github.com/rjabeen04/musical-volunteer).
+> 🚀 **Application Workload:** This platform provides the Azure infrastructure and DevSecOps foundation for the [Musical Volunteer Flask Application](https://github.com/rjabeen04/musical-volunteer), which is maintained as a separate application repository.
 
 # FDIC-Style Azure DevSecOps Platform
 
@@ -15,7 +15,25 @@ The goal is to demonstrate:
 This project is built as a **Proof of Concept (POC)** and resources can be safely created and destroyed.
 
 ---
+## Platform and Application Separation
 
+This repository focuses on the **Azure platform and DevSecOps infrastructure layer**.
+
+The application workload is maintained separately in the
+[Musical Volunteer Flask Application](https://github.com/rjabeen04/musical-volunteer)
+repository.
+
+The platform repository is responsible for:
+
+- Azure infrastructure provisioning
+- AKS platform configuration
+- Networking and security controls
+- Application Gateway / WAF
+- Azure Container Registry
+- Azure Key Vault and encryption
+- Azure DevOps CI/CD
+- Infrastructure security scanning
+- Deployment foundations for the application
 ## High-Level Architecture
 The platform provisions and manages the following Azure components:
 
