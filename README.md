@@ -3,97 +3,62 @@
 # FDIC-Style Azure DevSecOps Platform
 
 ## Project Goal
-This repository represents an **FDIC-style Azure DevSecOps platform** designed using enterprise and regulated-environment best practices.
+
+This repository demonstrates an **FDIC-style Azure DevSecOps platform** designed around enterprise and regulated-environment practices.
 
 The goal is to demonstrate:
+
 - Separation of application and infrastructure concerns
 - Secure-by-default cloud architecture
-- Governance, auditability, and DevSecOps workflows
-- Infrastructure-as-Code using Terraform
+- Governance and auditability
+- Infrastructure as Code using Terraform
 - Kubernetes-based application delivery on Azure
+- Automated security validation
+- Controlled infrastructure changes through CI/CD
 
 This project is built as a **Proof of Concept (POC)** and resources can be safely created and destroyed.
 
 ---
 
 ## High-Level Architecture
+
 The platform provisions and manages the following Azure components:
 
 - **Azure Kubernetes Service (AKS)**
 - **Azure Container Registry (ACR)**
 - **Application Gateway with Web Application Firewall (WAF)**
 - **Azure Key Vault** for secrets management
-- **Log Analytics** for centralized logging and monitoring
+- **Customer-managed encryption**
+- **Virtual Network and subnet segmentation**
+- **Log Analytics** for centralized monitoring
 - **Azure DevOps Pipelines** for CI/CD and security automation
 
-Application workloads are deployed to AKS using **Helm**, while infrastructure is provisioned using **Terraform**.
-
-Detailed diagrams are maintained in `docs/diagrams/`.
+Infrastructure is provisioned using **Terraform modules**, while application workloads are designed to run on **AKS**.
 
 ---
 
 ## Pipeline Overview
-This repository focuses on **platform and infrastructure pipelines**.
 
-Planned pipeline stages include:
-- Pull request validation with security scanning
-- Terraform plan on pull requests
-- Manual approval gates for protected environments
-- Terraform apply for environment provisioning
-- Helm-based application deployment
-- Optional destroy workflows for POC teardown
+This repository uses **GitHub as the source repository** and **Azure DevOps as the CI/CD orchestration platform**.
 
-Security gates (SAST, dependency scanning, IaC scanning) are enforced before changes reach protected branches.
+Infrastructure changes follow a controlled Terraform workflow.
 
----
+The Azure DevOps pipeline performs:
 
-## Phases / Roadmap
-**Phase 0 – Repository Governance & Structure**
-- Repository scaffolding, Documentation, and Security baselines (CodeQL, Dependabot).
+1. Terraform format validation
+2. Terraform initialization
+3. Terraform validation
+4. Checkov infrastructure security scanning
+5. Gitleaks secret scanning
+6. Terraform plan
+7. Terraform plan artifact publication
+8. Terraform apply
 
-**Phase 1 – Infrastructure Provisioning**
-- AKS, networking, WAF, and supporting services.
-- Terraform modules and environments.
-
-**Phase 2 – Application Deployment**
-- Helm charts for application workloads.
-- Ingress and WAF integration.
-
-**Phase 3 – Security & Observability**
-- Infrastructure security scanning.
-- Runtime monitoring and logging.
+The pipeline is designed to provide security and validation gates before infrastructure changes are applied.
 
 ---
 
-## How to Run (Placeholder)
-Execution details will be added as Terraform modules and pipelines are implemented.
-
-Typical usage includes:
-- Terraform plan/apply via Azure DevOps Pipelines.
-- Helm deployments to AKS.
-- Manual approvals for protected environments.
-
----
-
-## 🔍 Post-Mortem: Handling Cloud "Eventual Consistency"
-**Current Status:** Deployment pipeline intermittently encounters a `403 Forbidden` at the `azurerm_key_vault_key` stage.
-
-### The Technical Challenge
-In high-security environments, Azure Key Vault uses a firewall to restrict access. While Terraform successfully updates the firewall rules (Management Plane), the physical distribution of those rules across Azure's global infrastructure (Data Plane) experiences a "propagation lag." 
-
-### Engineering Response
-1. **Dynamic Whitelisting:** Implemented `data "http"` to fetch the Azure Devops build  agent's public IP dynamically.
-2. **Synchronization Gates:** Introduced a `time_sleep` resource to create a 150-second buffer.
-3. **Conclusion:** This error highlights the gap between "API Success" and "Resource Readiness." In a production enterprise setting, the next architectural step would be utilizing **Self-Hosted Azure Devops Agents** inside the VNet to bypass public internet propagation entirely.
-# FDIC-Style Azure DevSecOps
-
-## Overview
-
-This project demonstrates a secure Infrastructure as Code (IaC) and DevSecOps workflow using Terraform and Azure DevOps.
-
-The project integrates GitHub source control with Azure DevOps Pipelines to automatically validate Terraform code and perform Infrastructure as Code security scanning before infrastructure changes are approved.
-
-## Architecture
+## Deployment Model
 
 ```text
 Developer
@@ -110,7 +75,22 @@ Azure DevOps Pipeline
     |
     +--> Terraform Validate
     |
-    +--> Checkov Security Scan
+    +--> Checkov IaC Security Scan
+    |
+    +--> Gitleaks Secret Scan
+    |
+    +--> Terraform Plan
+    |
+    +--> Plan Artifact
+    |
+    +--> Terraform Apply
     |
     v
-Validation / Security Results
+Azure Platform
+    |
+    +--> Virtual Network
+    +--> ACR
+    +--> Key Vault
+    +--> AKS
+    +--> Application Gateway / WAF
+    +--> Log Analytics
